@@ -1,0 +1,11 @@
+version: '2'
+
+services:
+  api:
+    build: .
+    image: sirbot/api:latest
+    container_name: sirbot_api
+    ports:
+     - "5000:5000"
+    volumes:
+     - ./app:/deploy/app
