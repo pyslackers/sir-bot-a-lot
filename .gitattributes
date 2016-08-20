@@ -1,0 +1,132 @@
+# Auto detect text files and perform LF normalization
+* -text
+* whitespace=cr-at-eol
+
+# binaries
+*.7z   binary
+*.eps  binary
+*.fla  binary
+*.flv  binary
+*.gif  binary
+*.gz   binary
+*.ico  binary
+*.jpeg binary
+*.jpg  binary
+*.mov  binary
+*.mp3  binary
+*.mp4  binary
+*.png  binary
+*.pyc  binary
+*.svg  binary
+*.swf  binary
+*.tif  binary
+*.tiff binary
+*.ttf  binary
+*.zip  binary
+
+# build config
+*.bowerrc   text
+*.npmignore text
+
+# code analysis config
+.csslintrc    text
+.eslintrc     text
+.jscsrc       text
+.jshintignore text
+.jshintrc     text
+.stylelintrc  text
+
+# Custom for Visual Studio
+*.cs     diff=csharp
+*.sln    merge=union
+*.csproj merge=union
+*.vbproj merge=union
+*.fsproj merge=union
+*.dbproj merge=union
+
+# Documentation
+*.md    text
+LICENSE text
+AUTHORS text
+
+# Documents
+*.doc	 diff=astextplain
+*.DOC	 diff=astextplain
+*.docx   diff=astextplain
+*.DOCX   diff=astextplain
+*.dot    diff=astextplain
+*.DOT    diff=astextplain
+*.PDF	 diff=astextplain
+*.pdf    diff=astextplain
+*.rtf	 diff=astextplain
+*.RTF	 diff=astextplain
+
+# git config
+.gitattributes text
+.gitignore     text
+.gitconfig     text
+
+# misc config
+.editorconfig text
+*.toml        text
+*.yaml        text
+*.yml         text
+
+# server config
+.htaccess text
+
+# source code
+*.adoc     text
+*.bat      text
+*.coffee   text
+*.css      text
+*.csv      text
+*.htm      text
+*.html     text
+*.inc      text
+*.ini      text
+*.js       text
+*.json     text
+*.less     text
+*.mustache text
+*.php      text
+*.pl       text
+*.rb       text
+*.sass     text
+*.scm      text
+*.scss     text
+*.sh       text
+*.sql      text
+*.styl     text
+*.svg      text
+*.ts       text
+*.tsv      text
+*.txt      text
+*.xml      text
+
+# templates
+*.dot   text
+*.ejs   text
+*.haml  text
+*.hbs   text
+*.hbt   text
+*.jade  text
+*.latte text
+*.phtml text
+*.tmpl  text
+
+# Python
+
+*.pxd	text
+*.py 	text
+*.py3 	text
+*.pyw 	text
+*.pyx  	text
+
+# Python Binary
+*.db	binary
+*.p 	binary
+*.pkl 	binary
+*.pyc 	binary
+*.pyd	binary
+*.pyo 	binary
