@@ -1,9 +1,37 @@
-# Contributing
+# Contributing to the Sir Bot A Lot Project
 
-Contributions are welcome, and they are greatly appreciated! Every
-little bit helps, and credit will always be given.
+:+1::tada: First off, thanks for taking the time to contribute! :tada:
 
-You can contribute in many ways:
+Contributions are welcome by anybody and everybody. We are not kidding! 
+
+The rest of this document will be guidelines to contributing to the project. Remember that these are just guidelines, not rules. Use common sense as much as possible.
+
+
+#### Table of Contents
+
+- [Pull Request Guidelines](#pull-request-guidelines)
+- [Types of Contributions](#types-of-contributions)
+  - [Report Bugs](#report-bugs)
+  - [Fix Bugs](#fix-bugs)
+  - [Implement Features](#implement-features)
+  - [Write Documentation](#write-documentation)
+  - [Submit Feedback](#submit-feedback)
+- [Get Started](#get-started)
+- [Git Hygiene](#git-hygiene)
+  - [Squash Commits](#squash-commits)
+  - [Handling Merge Conflicts](#handling-merge-conflicts)    
+
+
+## Pull Request Guidelines
+
+Before you submit a pull request, check that it meets these guidelines:
+
+1. The pull request should include tests (if necessary). If you have any questions about how to write tests then ask the community.
+2. If the pull request adds functionality update the docs where appropriate.
+3. [Use a good commit message](https://github.com/spring-projects/spring-framework/blob/30bce7/CONTRIBUTING.md#format-commit-messages)
+4. [Squash your commits](#squash-commits)
+
+If you have any issues with [Git Hygiene](#git-hygiene) might help.
 
 ## Types of Contributions
 
@@ -81,21 +109,49 @@ Ready to contribute? Here's how to set up `sir-bot-a-lot` for local development.
 
 7. Submit a pull request through the GitHub website.
 
-## Pull Request Guidelines
+## Git Hygiene
 
-Before you submit a pull request, check that it meets these guidelines:
+### Squash Commits
 
-1. The pull request should include tests.
-2. If the pull request adds functionality, the docs should be updated. Put
-   your new functionality into a function with a docstring, and add the
-   feature to the list in README.rst.
-3. The pull request should work for Python 2.6, 2.7, 3.3, 3.4 and 3.5, and for PyPy. Check
-   https://travis-ci.org/autoferrit/sir-bot-a-lot/pull_requests
-   and make sure that the tests pass for all supported Python versions.
+ As a general rule of thumb, if a commit modifies a previous commit in the same PR, it probably needs to be squashed. That means that a PR may often only be a single commit. This makes rebasing (see below) easier, and keeps the history clean, which can make debugging infinitely easier in the long run. We also don't need records of only fixing whitespace or spelling mistakes in your PR.
 
-## Tips
+- It's fine to make as many commits as you need while you're working on your local branch. Keeping your history clean as you work will probably be much easier than trying to do it all at the end, though.
 
-To run a subset of tests::
+- If you just want to make a change and have it apply to your last commit, you can use `git commit --amend`. If you want a change to be associated with an older commit, you can use `git commit -i HEAD~3` (where `3` is the number of commits to rebase). You can also use `git log` to find a commit's hash and `git rebase -i <commit hash>` (the commit should be the one PRIOR to the commit you want to modify).
 
-$ py.test tests.test_sir-bot-a-lot
+- Interactive rebase (`git rebase -i`) will open your default editor in which you can replace `pick` with `fixup` or `f` to combine commits (you can also use this to reorder commits, mark commits to edit their commit messages, and other powerful tools which are explained in the file itself). Save the changes, and git will execute the rebase.
 
+After rebasing, if your branch is already pushed up to GitHub, you'll have to force push the changes using `git push -f`, since the history has changed.
+
+Do you have any questions ?
+
+> When in doubt, ask me. - @skift
+
+**Warning:** Only rebase your own branches.
+
+**Warning:** **DO NOT REBASE HOTFIXES** Otherwise :bomb: :sparkles:
+
+### Handling Merge Conflicts
+
+Occasionally a Pull Request will have Merge Conflicts. **Do not merge master into your branch.** Instead, make sure your `master` branch is up to date:
+
+```sh
+git checkout master
+git pull
+```
+
+Then rebase your branch on `master`:
+
+```sh
+git checkout _my-branch_
+git rebase master
+```
+
+If there are any conflicts you need to resolve, it will suspend the rebase for you to fix them. Then do:
+
+```sh
+git add .
+git rebase --continue
+```
+
+It will do one round of conflict-checking for each commit in your branch, so keeping your history clean will make rebasing much easier. When the rebase is done, your branch will be up to date with master and ready to issue a PR if you are.
