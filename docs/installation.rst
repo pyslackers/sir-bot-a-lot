@@ -26,7 +26,7 @@ you through the process.
 From sources
 ------------
 
-The sources for sir-bot-a-lot can be downloaded from the `Github repo`_.
+The sources for sir-bot-a-lot can be downloaded from the `gitlab repo`_.
 
 You can either clone the public repository:
 
@@ -47,5 +47,5 @@ Once you have a copy of the source, you can install it with:
     $ python setup.py install
 
 
-.. _Github repo: https://gitlab.com/mikefromit/sir-bot-a-lot
+.. _gitlab repo: https://gitlab.com/mikefromit/sir-bot-a-lot
 .. _tarball: https://gitlab.com/mikefromit/sir-bot-a-lot/tarball/master

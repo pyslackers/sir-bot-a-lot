@@ -20,8 +20,8 @@ ADD ./.zshrc /root/.zshrc
 ADD ./.zshenv /root/.zshenv
 ADD ./.vimrc /root/.vimrc
 
-RUN git clone https://github.com/VundleVim/Vundle.vim.git /root/.vim/bundle/Vundle.vim && \
-    git clone https://github.com/zsh-users/antigen.git /root/.antigen
+RUN git clone https://gitlab.com/VundleVim/Vundle.vim.git /root/.vim/bundle/Vundle.vim && \
+    git clone https://gitlab.com/zsh-users/antigen.git /root/.antigen
 
 ENV SHELL=/bin/zsh
 ENV HOME=/root
