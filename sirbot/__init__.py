@@ -40,3 +40,5 @@ DATA = {
     'docker_name': 'sirbot_api',
     'docker_tag': 'latest'
 }
+
+from .core import Bot
