@@ -1,60 +1,93 @@
-import json
+import logging
 
-import aiohttp
+
+import re
+
 import asyncio
 
-import sys
+import functools
+
+from .client import Client
+
+logger = logging.getLogger(__name__)
 
 
-class Bot(object):
-    def __init__(self, token):
-        self.token = token
-        self.root_url = 'https://slack.com/api/'
-        self.channel = asyncio.Queue()
-        self.plugin_manager = []
-        print(self.token)
+class SirBot:
 
-    async def message_parser(self):
+    def __init__(self, token, *, loop=None, **options):
+        self.loop = asyncio.get_event_loop() if loop is None else loop
+        self._rtm_client = Client(token)
+        self.commands = {
+            'listen': {}
+        }
+        self.mentioned_regex = re.compile(r'^(?:\<@(?P<atuser>\w+)\>:?|(?P<username>\w+)) ?(?P<text>.*)$')
+
+        # These are for future purposes. HTTPClient is to send messages via the http api.
+        # The webserver is to allow for webhooks and/or web frontend.
+        # This will probably be built with aiohttp.
+
+        # self._http_client = HTTPClient(token)
+        # self._web_server = WebServer()
+
+    @property
+    def get_bot_id(self):
+        return self._rtm_client._login_data['self']['id']
+
+    def listen(self, matchstr, flags=0, func=None):
+        if func is None:
+            return functools.partial(self.listen, matchstr, flags)
+        wrapped = func
+
+        if not asyncio.iscoroutinefunction(wrapped):
+            wrapped = asyncio.coroutine(wrapped)
+        self.commands['listen'][re.compile(matchstr, flags)] = func
+
+        # Return original func
+        return func
+
+    async def rtm_read(self):
+
         while True:
-            message = await self.channel.get()
+            msg = await self._rtm_client.queue.get()
 
-            if message.get('type') == 'message':
-                user = await self.api_call('users.info',
-                                      {'user': message.get('user')})
+            # Don't do anything if the message is an edit or delete
+            subtype = msg.get('subtype', '')
+            if subtype == u'message_changed':
+                continue
 
-                print('{0}: {1}'.format(user['user']['name'],
-                                        message['text']))
-            else:
-                print(message, file=sys.stderr)
+            bot_id = self.get_bot_id
 
-    async def api_call(self, method, data=None):
-        with aiohttp.ClientSession() as session:
-            form = aiohttp.FormData(data or {})
-            form.add_field('token', self.token)
-            async with session.post('{0}/{1}'.format(self.root_url, method),
-                                    data=form) as response:
-                assert 200 == response.status, ('{0} with {1} failed.'
-                                               .format(method, data))
-                print(response)
-                return await response.json()
+            text = msg.get('text', '')
+            channel = msg.get('channel', '')
 
-    async def slack_rtm(self):
-        self.rtm = await self.api_call('rtm.start')
-        assert self.rtm['ok'], 'Error connecting to RTM.'
+            m = self.mentioned_regex.match(text)
 
-        async with aiohttp.ClientSession() as session:
-            async with session.ws_connect(self.rtm['url']) as ws:
-                async for msg in ws:
-                    assert msg.tp == aiohttp.MsgType.text
-                    message = json.loads(msg.data)
-                    # asyncio.ensure_future(self.consumer(message))
-                    await self.channel.put(message)
+            if m:
+                matches = m.groupdict()
 
+                atuser = matches.get('atuser')
+                username = matches.get('username')
+                text = matches.get('text')
+                alias = matches.get('alias')
+
+                if atuser != bot_id:
+                    continue
+
+                for matcher in self.commands['listen']:
+                    n = matcher.search(text)
+                    if n:
+                        msg = dict()
+                        msg['text'] = text
+                        msg['channel'] = channel
+                        func = self.commands['listen'][matcher]
+                        await func(msg, n.groups())
 
     def run(self):
-        loop = asyncio.get_event_loop()
-        loop.set_debug(True)
+        try:
+            self.loop.create_task(self._rtm_client.rtm_connect())
+            self.loop.run_until_complete(asyncio.ensure_future(self.rtm_read()))
 
-        loop.run_until_complete(asyncio.wait((self.slack_rtm(),
-                                             self.message_parser())))
-        loop.close()
+        except KeyboardInterrupt:
+            self.loop.close()
+
+
