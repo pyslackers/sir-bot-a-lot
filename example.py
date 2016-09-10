@@ -1,8 +1,9 @@
 import json
 import os
 import asyncio
-
 from urllib.request import urlopen
+
+import aiohttp
 
 from sirbot import SirBot
 
@@ -15,9 +16,10 @@ bot = SirBot(token)
 async def get_quote_of_the_day():
     url = 'http://api.theysaidso.com/qod.json'
     loop = asyncio.get_event_loop()
-    response = await loop.run_in_executor(None, urlopen, url)
+    async with aiohttp.ClientSession() as session:
+        response = await session.get(url)
 
-    if response.code != 200:
+    if response.status != 200:
         raise Exception('There was a api error')
 
     quote_r = json.loads(response.read().decode('utf-8'))
