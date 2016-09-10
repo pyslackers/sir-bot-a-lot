@@ -1,10 +1,6 @@
 import logging
-
-
 import re
-
 import asyncio
-
 import functools
 
 from .client import Client
@@ -14,13 +10,14 @@ logger = logging.getLogger(__name__)
 
 class SirBot:
 
-    def __init__(self, token, *, loop=None, **options):
-        self.loop = asyncio.get_event_loop() if loop is None else loop
+    def __init__(self, token, *, loop=None):
+        self.loop = loop or asyncio.get_event_loop()
         self._rtm_client = Client(token)
         self.commands = {
             'listen': {}
         }
-        self.mentioned_regex = re.compile(r'^(?:\<@(?P<atuser>\w+)\>:?|(?P<username>\w+)) ?(?P<text>.*)$')
+        self.mentioned_regex = re.compile(
+            r'^(?:\<@(?P<atuser>\w+)\>:?|(?P<username>\w+)) ?(?P<text>.*)$')
 
         # These are for future purposes. HTTPClient is to send messages via the http api.
         # The webserver is to allow for webhooks and/or web frontend.
@@ -30,7 +27,7 @@ class SirBot:
         # self._web_server = WebServer()
 
     @property
-    def get_bot_id(self):
+    def bot_id(self):
         return self._rtm_client._login_data['self']['id']
 
     def listen(self, matchstr, flags=0, func=None):
@@ -55,8 +52,6 @@ class SirBot:
             if subtype == u'message_changed':
                 continue
 
-            bot_id = self.get_bot_id
-
             text = msg.get('text', '')
             channel = msg.get('channel', '')
 
@@ -70,24 +65,27 @@ class SirBot:
                 text = matches.get('text')
                 alias = matches.get('alias')
 
-                if atuser != bot_id:
+                if atuser != self.bot_id:
                     continue
 
-                for matcher in self.commands['listen']:
+                for matcher, func in self.commands['listen'].items():
                     n = matcher.search(text)
                     if n:
-                        msg = dict()
-                        msg['text'] = text
-                        msg['channel'] = channel
-                        func = self.commands['listen'][matcher]
+                        msg = dict(
+                            text=text,
+                            channel=channel
+                        )
                         await func(msg, n.groups())
 
     def run(self):
         try:
-            self.loop.create_task(self._rtm_client.rtm_connect())
-            self.loop.run_until_complete(asyncio.ensure_future(self.rtm_read()))
-
+            asyncio.ensure_future(self._rtm_client.rtm_connect(),
+                                  loop=self.loop)
+            asyncio.ensure_future(self.rtm_read(), loop=self.loop)
+            self.loop.run_forever()
         except KeyboardInterrupt:
+            pass
+        finally:
             self.loop.close()
 
 
