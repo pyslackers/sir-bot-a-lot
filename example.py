@@ -1,13 +1,10 @@
-import json
 import os
-import asyncio
-from urllib.request import urlopen
 
 import aiohttp
 
 from sirbot import SirBot
 
-token = os.environ.get('SIRBOT_TOKEN')
+token = os.environ['SIRBOT_TOKEN']
 
 bot = SirBot(token)
 
@@ -15,14 +12,11 @@ bot = SirBot(token)
 # Example quote of the day plugin
 async def get_quote_of_the_day():
     url = 'http://api.theysaidso.com/qod.json'
-    loop = asyncio.get_event_loop()
     async with aiohttp.ClientSession() as session:
-        response = await session.get(url)
-
-    if response.status != 200:
-        raise Exception('There was a api error')
-
-    quote_r = json.loads(response.read().decode('utf-8'))
+        async with session.get(url) as response:
+            if response.status != 200:
+                raise Exception('Error talking to quote api')
+            quote_r = await response.json()
 
     quote = quote_r['contents']['quotes'][0]['quote']
     author = quote_r['contents']['quotes'][0]['author']
