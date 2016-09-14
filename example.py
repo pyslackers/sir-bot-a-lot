@@ -12,11 +12,10 @@ bot = SirBot(token)
 # Example quote of the day plugin
 async def get_quote_of_the_day():
     url = 'http://api.theysaidso.com/qod.json'
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            if response.status != 200:
-                raise Exception('Error talking to quote api')
-            quote_r = await response.json()
+    async with aiohttp.get(url) as response:
+        if response.status != 200:
+            raise Exception('Error talking to quote api')
+        quote_r = await response.json()
 
     quote = quote_r['contents']['quotes'][0]['quote']
     author = quote_r['contents']['quotes'][0]['author']
