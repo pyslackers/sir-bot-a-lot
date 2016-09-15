@@ -8,8 +8,6 @@ the sirbot api
 :copyright: (c) 2016 by Python Developers Slack Community
 :licence: MIT, see LICENCE for more details
 """
-from __future__ import absolute_import, unicode_literals
-
 # http://patorjk.com/software/taag/#p=display&f=Star%20Wars&t=sirbot
 
 #      _______. __  .______         .______     ______   .___________.
@@ -41,4 +39,4 @@ DATA = {
     'docker_tag': 'latest'
 }
 
-from .core import SirBot
+from .core import SirBot  # noqa

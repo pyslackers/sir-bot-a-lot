@@ -5,8 +5,8 @@ test_sirbot
 
 Tests for `sirbot` module.
 """
-import pytest
-import sirbot
+# import pytest
+# import sirbot
 
 
 class TestBot(object):

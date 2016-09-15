@@ -5,8 +5,8 @@ test_dice
 
 Tests for `dice` plugin
 """
-import pytest
 from sirbot.plugins import dice
+
 
 class TestDiceBot(object):
     @classmethod
@@ -33,7 +33,7 @@ class TestDiceBot(object):
         ctx = {'user': 'test'}
         result = dice.roll_dice(ctx, '10d1+10')
         assert(result == 'test - Rolled 10d1+10 for a result of 20')
-        
+
     @classmethod
     def tear_down(self):
         pass
