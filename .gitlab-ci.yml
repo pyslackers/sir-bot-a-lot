@@ -1,0 +1,10 @@
+image: python:3.5
+before_script:
+  - pip install -Ur requirements_dev.txt
+
+stages:
+  - test
+
+test_app:
+  script:
+    - python -m pytest
