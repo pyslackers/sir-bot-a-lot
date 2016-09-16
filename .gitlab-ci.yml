@@ -1,10 +1,24 @@
 image: python:3.5
+
 before_script:
   - pip install -Ur requirements_dev.txt
 
 stages:
   - test
+  - deploy
 
 test_app:
+  stage: test
   script:
     - python -m pytest
+
+staging:
+  stage: deploy
+  type: deploy
+  script:
+  - apt-get update -qy
+  - apt-get install -y --no-install-recommends ruby-dev rubygems
+  - gem install dpl
+  - dpl --provider=heroku --app=sir-bot-a-lot --api-key=$HEROKU_STAGING_API_KEY
+  only:
+  - core/main-bot-arch
