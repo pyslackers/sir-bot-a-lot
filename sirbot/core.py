@@ -19,7 +19,8 @@ class SirBot:
         self.mentioned_regex = re.compile(
             r'^(?:\<@(?P<atuser>\w+)\>:?|(?P<username>\w+)) ?(?P<text>.*)$')
 
-        # These are for future purposes. HTTPClient is to send messages via the http api.
+        # These are for future purposes. HTTPClient is to send messages via
+        # the http api.
         # The webserver is to allow for webhooks and/or web frontend.
         # This will probably be built with aiohttp.
 
@@ -61,9 +62,9 @@ class SirBot:
                 matches = m.groupdict()
 
                 atuser = matches.get('atuser')
-                username = matches.get('username')
+                # username = matches.get('username')
                 text = matches.get('text')
-                alias = matches.get('alias')
+                # alias = matches.get('alias')
 
                 if atuser != self.bot_id:
                     continue
@@ -87,5 +88,3 @@ class SirBot:
             pass
         finally:
             self.loop.close()
-
-

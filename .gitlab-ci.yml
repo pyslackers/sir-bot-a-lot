@@ -1,19 +1,23 @@
 image: python:3.5
 
-before_script:
-  - pip install -Ur requirements_dev.txt
-
 stages:
+  - build
   - test
   - deploy
 
-test_app:
+lint:
+  stage: build
+  script:
+  - pip install flake8
+  - python -m flake8
+
+test:
   stage: test
   script:
-    - python -m pytest
+  - pip install -r requirements.txt
+  - python -m pytest tests/
 
 staging:
-  stage: deploy
   type: deploy
   script:
   - apt-get update -qy

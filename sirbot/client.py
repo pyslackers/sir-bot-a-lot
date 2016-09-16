@@ -44,7 +44,9 @@ class Client:
         post_data = urlencode(post_data)
 
         url = self.make_api_url(method)
-        headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
+        }
 
         response = await self.session.post(url, data=post_data.encode(),
                                            headers=headers)
@@ -80,7 +82,7 @@ class Client:
                     print(msg)
                     await self.queue.put(msg)
         else:
-            raise Exception('Error with slack {}'.format(self._login_data) )
+            raise Exception('Error with slack {}'.format(self._login_data))
 
     async def post_message(self, channel_name_or_id, text):
         data = {
