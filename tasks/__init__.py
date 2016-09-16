@@ -1,6 +1,6 @@
 from invoke import Collection
 
-from tasks import docker, docker
+from tasks import docker
 from tasks.base import clean, test, lint, publish, fmt, fmt_dry, swagger
 
 ns = Collection()

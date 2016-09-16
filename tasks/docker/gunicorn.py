@@ -2,8 +2,10 @@ from invoke import task
 
 from sirbot import DATA
 from tasks.docker import base
-from tasks.helpers import container_stop, container_rm, image_rm, image_build, \
+from tasks.helpers import (
+    container_stop, container_rm, image_rm, image_build,
     get_cache_string
+)
 
 NAMESPACE = DATA['author'].lower()
 APP = 'gunicorn'

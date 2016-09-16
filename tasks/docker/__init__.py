@@ -59,26 +59,18 @@ def rmi(ctx):
 
 @task
 def reset(ctx):
-    try:
-        run_cmd(ctx, 'docker stop api')
-    except Failure:
-        pass
-    try:
-        run_cmd(ctx, 'docker rm   api')
-    except Failure:
-        pass
-    try:
-        run_cmd(ctx, 'docker rmi  {}/api'.format(NAMESPACE))
-    except Failure:
-        pass
-    try:
-        run_cmd(ctx, 'docker rmi {}/gunicorn'.format(NAMESPACE))
-    except Failure:
-        pass
-    try:
-        run_cmd(ctx, 'docker rmi {}/base:python3.5'.format(NAMESPACE))
-    except Failure:
-        pass
+    cmds = [
+        lambda: run_cmd(ctx, 'docker stop api'),
+        lambda: run_cmd(ctx, 'docker rm api'),
+        lambda: run_cmd(ctx, 'docker rmi {}/api'.format(NAMESPACE)),
+        lambda: run_cmd(ctx, 'docker rmi {}/gunicorn'.format(NAMESPACE)),
+        lambda: run_cmd(ctx, 'docker rmi {}/base:python3.5'.format(NAMESPACE)),
+    ]
+    for cmd in cmds:
+        try:
+            cmd()
+        except Failure:
+            pass
 
 
 ns.add_task(build)

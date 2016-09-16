@@ -14,7 +14,7 @@ preload_app = True
 
 worker_class = 'sync'
 # only relevant for async workers:
-#worker_connections = 1000
+# worker_connections = 1000
 
 user = 'root'
 group = 'root'

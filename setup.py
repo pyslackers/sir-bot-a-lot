@@ -2,9 +2,8 @@
 # -*- coding: utf-8 -*-
 import codecs
 import os
-import sys
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 from sirbot import DATA
 
@@ -18,6 +17,7 @@ requirements = [
     'Click>=6.0',
     # TODO: put package requirements here
 ]
+
 
 def parse_reqs(req_path='./requirements.txt'):
     """Recursively parse requirements from nested pip files."""
@@ -38,6 +38,7 @@ def parse_reqs(req_path='./requirements.txt'):
                 install_requires.append(line)
 
     return install_requires
+
 
 def parse_readme():
     """Parse contents of the README."""

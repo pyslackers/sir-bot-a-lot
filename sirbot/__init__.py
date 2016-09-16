@@ -5,11 +5,9 @@ sirbot
 
 the sirbot api
 
-:copyright: (c) 2015 by Mike from IT
+:copyright: (c) 2016 by Python Developers Slack Community
 :licence: MIT, see LICENCE for more details
 """
-from __future__ import absolute_import, unicode_literals
-
 # http://patorjk.com/software/taag/#p=display&f=Star%20Wars&t=sirbot
 
 #      _______. __  .______         .______     ______   .___________.
@@ -27,8 +25,8 @@ from __future__ import absolute_import, unicode_literals
 
 DATA = {
     "author": 'Mike from IT',
-    "author_email": 'dev@mikefromit.com',
-    "copyright": 'Copyright 2016 Mike from IT',
+    "author_email": 'mike@mikefromit.com',
+    "copyright": 'Copyright 2016 Python Developers Community',
     "description": 'The good Sir Bot a lot',
     "license": 'MIT',
     "name": 'sirbot',
@@ -40,3 +38,5 @@ DATA = {
     'docker_name': 'sirbot_api',
     'docker_tag': 'latest'
 }
+
+from .core import SirBot  # noqa

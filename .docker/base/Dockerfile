@@ -16,9 +16,9 @@ RUN apk add --no-cache \
     mkdir -p /root/.vim-backups/swp/ && \
     mkdir -p /root/.vim/bundle
 
-ADD ./.zshrc /root/.zshrc
-ADD ./.zshenv /root/.zshenv
-ADD ./.vimrc /root/.vimrc
+COPY ./.zshrc /root/.zshrc
+COPY ./.zshenv /root/.zshenv
+COPY ./.vimrc /root/.vimrc
 
 RUN git clone https://gitlab.com/VundleVim/Vundle.vim.git /root/.vim/bundle/Vundle.vim && \
     git clone https://gitlab.com/zsh-users/antigen.git /root/.antigen
