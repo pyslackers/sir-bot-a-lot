@@ -25,4 +25,4 @@ staging:
   - gem install dpl
   - dpl --provider=heroku --app=sir-bot-a-lot --api-key=$HEROKU_STAGING_API_KEY
   only:
-  - core/main-bot-arch
+  - master
