@@ -56,27 +56,29 @@ class SirBot:
             text = msg.get('text', '')
             channel = msg.get('channel', '')
 
-            m = self.mentioned_regex.match(text)
+            if channel[:1] != 'D':
 
-            if m:
-                matches = m.groupdict()
+                m = self.mentioned_regex.match(text)
 
-                atuser = matches.get('atuser')
-                # username = matches.get('username')
-                text = matches.get('text')
-                # alias = matches.get('alias')
+                if m:
+                    matches = m.groupdict()
 
-                if atuser != self.bot_id:
-                    continue
+                    atuser = matches.get('atuser')
+                    # username = matches.get('username')
+                    text = matches.get('text')
+                    # alias = matches.get('alias')
 
-                for matcher, func in self.commands['listen'].items():
-                    n = matcher.search(text)
-                    if n:
-                        msg = dict(
-                            text=text,
-                            channel=channel
-                        )
-                        await func(msg, n.groups())
+                    if atuser != self.bot_id:
+                        continue
+
+            for matcher, func in self.commands['listen'].items():
+                n = matcher.search(text)
+                if n:
+                    msg = dict(
+                        text=text,
+                        channel=channel
+                    )
+                    await func(msg, n.groups())
 
     def run(self):
         try:
