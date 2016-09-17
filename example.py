@@ -1,3 +1,4 @@
+import logging
 import os
 
 import aiohttp
@@ -7,6 +8,9 @@ from sirbot import SirBot
 token = os.environ['SIRBOT_TOKEN']
 
 bot = SirBot(token)
+
+
+logging.getLogger('sirbot').setLevel(logging.DEBUG)
 
 
 # Example quote of the day plugin

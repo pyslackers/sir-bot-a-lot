@@ -5,7 +5,7 @@ import functools
 
 from .client import Client
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('sirbot')
 
 
 class SirBot:
@@ -33,11 +33,14 @@ class SirBot:
 
     def listen(self, matchstr, flags=0, func=None):
         if func is None:
+            logger.debug('No function provided, providing a partial.')
             return functools.partial(self.listen, matchstr, flags)
         wrapped = func
 
         if not asyncio.iscoroutinefunction(wrapped):
+            logger.debug('Function is not a coroutine, converting.')
             wrapped = asyncio.coroutine(wrapped)
+        logger.debug('Registering listener for "%s"', matchstr)
         self.commands['listen'][re.compile(matchstr, flags)] = func
 
         # Return original func
@@ -51,13 +54,13 @@ class SirBot:
             # Don't do anything if the message is an edit or delete
             subtype = msg.get('subtype', '')
             if subtype == u'message_changed':
+                logger.debug('Ignoring changed message type')
                 continue
 
             text = msg.get('text', '')
             channel = msg.get('channel', '')
 
-            if channel[:1] != 'D':
-
+            if not channel.startswith('D'):
                 m = self.mentioned_regex.match(text)
 
                 if m:
@@ -69,11 +72,14 @@ class SirBot:
                     # alias = matches.get('alias')
 
                     if atuser != self.bot_id:
+                        logger.debug('Received message directed at self,'
+                                     ' dropping')
                         continue
 
             for matcher, func in self.commands['listen'].items():
                 n = matcher.search(text)
                 if n:
+                    logger.debug('Located handler for text, invoking')
                     msg = dict(
                         text=text,
                         channel=channel
@@ -81,12 +87,15 @@ class SirBot:
                     await func(msg, n.groups())
 
     def run(self):
+        tasks = [
+            self.loop.create_task(self._rtm_client.rtm_connect()),
+            self.loop.create_task(self.rtm_read()),
+        ]
         try:
-            asyncio.ensure_future(self._rtm_client.rtm_connect(),
-                                  loop=self.loop)
-            asyncio.ensure_future(self.rtm_read(), loop=self.loop)
             self.loop.run_forever()
         except KeyboardInterrupt:
             pass
         finally:
+            for task in tasks:
+                task.cancel()
             self.loop.close()

@@ -6,7 +6,7 @@ from urllib.parse import urlencode
 import aiohttp
 import websockets
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger('sirbot')
 
 
 class SlackConnectionError(Exception):
@@ -41,22 +41,19 @@ class Client:
     async def api_call(self, method='?', post_data=None):
         post_data = post_data or {}
         post_data['token'] = self.token
-        post_data = urlencode(post_data)
+        post_data = urlencode(post_data).encode()
 
         url = self.make_api_url(method)
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
         }
 
-        response = await self.session.post(url, data=post_data.encode(),
-                                           headers=headers)
-
-        if response.status != 200:
-            raise SlackConnectionError('There was a slack connection error')
-
-        message = await response.json()
-
-        return message
+        async with self.session.post(url, data=post_data,
+                                     headers=headers) as resp:
+            if resp.status != 200:
+                logger.error('Unable to post to slack: %s', await resp.text())
+                raise SlackConnectionError('Slack connection error')
+            return await resp.json()
 
     def make_api_url(self, method):
         return self.api_root.format(method)
@@ -68,7 +65,7 @@ class Client:
         if self._login_data.get('ok'):
             ws_url = self._login_data['url']
             self.ws = await websockets.connect(ws_url)
-            print('login data ok')
+            logger.info('login data ok')
 
             while not self.is_closed:
                 msg = await self.ws.recv()
@@ -79,7 +76,7 @@ class Client:
                 msg = json.loads(msg)
 
                 if msg.get('type') == 'message':
-                    print(msg)
+                    logger.debug('Message Received: %s', msg)
                     await self.queue.put(msg)
         else:
             raise Exception('Error with slack {}'.format(self._login_data))
