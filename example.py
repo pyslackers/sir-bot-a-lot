@@ -4,6 +4,7 @@ import os
 import aiohttp
 
 from sirbot import SirBot
+from sirbot.base import Message
 
 token = os.environ['SIRBOT_TOKEN']
 
@@ -16,6 +17,7 @@ logging.getLogger('sirbot').setLevel(logging.DEBUG)
 # Example quote of the day plugin
 async def get_quote_of_the_day():
     url = 'http://api.theysaidso.com/qod.json'
+    quote_r = ''
     async with aiohttp.get(url) as response:
         if response.status != 200:
             raise Exception('Error talking to quote api')
@@ -33,12 +35,10 @@ async def get_quote_of_the_day():
 @bot.listen('(([Cc]an|[Mm]ay) I have the )?quote of the day\?$')
 async def quote_of_the_day(message, *args, **kwargs):
     quote = await get_quote_of_the_day()
+    response = Message(quote)
+    response.to = message.to
 
-    # This will definitely change once the HTTP client is implemented.
-    # The main idea is that everything is in the message and the api
-    # would look like this:
-    # message.send(quote)
-    await bot._rtm_client.post_message(message['channel'], quote)
+    await bot._rtm_client.post_message(response)
 
 
 if __name__ == '__main__':
