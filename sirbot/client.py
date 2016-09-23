@@ -65,7 +65,7 @@ class Client:
         if self._login_data.get('ok'):
             ws_url = self._login_data['url']
             self.ws = await websockets.connect(ws_url)
-            logger.info('login data ok')
+            logger.debug('login data ok')
 
             while not self.is_closed:
                 msg = await self.ws.recv()
@@ -81,11 +81,12 @@ class Client:
         else:
             raise Exception('Error with slack {}'.format(self._login_data))
 
-    async def post_message(self, channel_name_or_id, text):
+    async def post_message(self, msg):
+
         data = {
             'type': 'message',
-            'channel': channel_name_or_id,
-            'text': text
+            'channel': msg.to.id,
+            'text': msg.text
         }
         content = json.dumps(data)
         await self.ws.send(content)

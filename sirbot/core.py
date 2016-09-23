@@ -3,6 +3,7 @@ import re
 import asyncio
 import functools
 
+from sirbot.base import Message, User, Channel
 from .client import Client
 
 logger = logging.getLogger('sirbot')
@@ -15,6 +16,9 @@ class SirBot:
         self._rtm_client = Client(token)
         self.commands = {
             'listen': {}
+        }
+        self.event_handlers = {
+            'message': self._message_handler
         }
         self.mentioned_regex = re.compile(
             r'^(?:\<@(?P<atuser>\w+)\>:?|(?P<username>\w+)) ?(?P<text>.*)$')
@@ -51,45 +55,86 @@ class SirBot:
         while True:
             msg = await self._rtm_client.queue.get()
 
-            # Don't do anything if the message is an edit or delete
-            subtype = msg.get('subtype', '')
-            if subtype == u'message_changed':
-                logger.debug('Ignoring changed message type')
-                continue
+            await self._dispatch_message(msg)
 
-            text = msg.get('text', '')
-            channel = msg.get('channel', '')
+    async def _dispatch_message(self, msg):
+        """
+         Process handler for incoming slack messages
+        :param msg:
+        :return:
+        """
+        logger.debug('Dispatcher received message %s' % msg)
 
-            if not channel.startswith('D'):
-                m = self.mentioned_regex.match(text)
+        subtype = msg.get('subtype', None)
 
-                if m:
-                    matches = m.groupdict()
+        if subtype == u'message_changed':
+            logger.debug('Ignoring changed message subtype')
+            return
 
-                    atuser = matches.get('atuser')
-                    # username = matches.get('username')
-                    text = matches.get('text')
-                    # alias = matches.get('alias')
+        if subtype == u'message_deleted':
+            logger.debug('Ignoring deleted message subtype')
+            return
 
-                    if atuser != self.bot_id:
-                        logger.debug('Received message directed at self,'
-                                     ' dropping')
-                        continue
+        if 'type' not in msg:
+            logging.debug('Ignoring non event message %s' % msg)
+            return
 
-            for matcher, func in self.commands['listen'].items():
-                n = matcher.search(text)
-                if n:
-                    logger.debug('Located handler for text, invoking')
-                    msg = dict(
-                        text=text,
-                        channel=channel
-                    )
-                    await func(msg, n.groups())
+        event_type = msg['type']
+
+        event_handler = self.event_handlers.get(event_type)
+
+        if event_handler is None:
+            logger.debug('No event handler for this type %s, '
+                         'ignoring ...' % event_type)
+            return
+
+        try:
+            await event_handler(msg)
+        except Exception:
+            logger.exception('There was an issue with event handler %s'
+                             % event_handler)
+
+    async def _message_handler(self, msg):
+        logger.debug('Message handler received %s' % msg)
+
+        channel = msg.get('channel', None)
+
+        if channel[0] not in 'CGD':
+            logger.debug('Unknown channel, Unable to handle this channel: %s',
+                         channel)
+            return
+
+        if 'message' in msg:
+            text = msg['message']['text']
+            user = msg['message'].get('user', msg.get('bot_id'))
+        else:
+            text = msg['text']
+            user = msg.get('user', msg.get('bot_id'))
+
+        message = Message(text)
+
+        if channel.startswith('D'):
+            # If the channel starts with D it is a direct message to the bot
+            message.frm = User(user, msg['channel'])
+            message.to = User(msg['channel'])
+        else:
+            message.frm = User(user, msg['channel'])
+            message.to = Channel(msg['channel'])
+
+        await self._plugin_dispatcher(message)
+
+    async def _plugin_dispatcher(self, msg):
+
+        for matcher, func in self.commands['listen'].items():
+            n = matcher.search(msg.text)
+            if n:
+                logger.debug('Located handler for text, invoking')
+                await func(msg, n.groups())
 
     def run(self):
         tasks = [
             self.loop.create_task(self._rtm_client.rtm_connect()),
-            self.loop.create_task(self.rtm_read()),
+            self.loop.create_task(self.rtm_read())
         ]
         try:
             self.loop.run_forever()
