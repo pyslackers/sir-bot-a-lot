@@ -3,6 +3,8 @@ import re
 import asyncio
 import functools
 
+from aiohttp import web
+
 from sirbot.base import Message, User, Channel
 from .client import RTMClient, HTTPClient
 
@@ -10,7 +12,10 @@ logger = logging.getLogger('sirbot')
 
 
 class SirBot:
-    def __init__(self, token, *, loop=None):
+    def __init__(self, token, *, host: str='0.0.0.0', port: int=8080,
+                 loop: asyncio.AbstractEventLoop=None):
+        self._host = host
+        self._port = port
         self.loop = loop or asyncio.get_event_loop()
         self._rtm_client = RTMClient(token)
         self._http_client = HTTPClient(token)
@@ -23,13 +28,14 @@ class SirBot:
         self.mentioned_regex = re.compile(
             r'^(?:\<@(?P<atuser>\w+)\>:?|(?P<username>\w+)) ?(?P<text>.*)$')
 
-        # These are for future purposes. HTTPClient is to send messages via
-        # the http api.
-        # The webserver is to allow for webhooks and/or web frontend.
-        # This will probably be built with aiohttp.
-
-        # self._http_client = HTTPClient(token)
-        # self._web_server = WebServer()
+        self._app = web.Application(loop=loop)
+        self._app['tasks'] = []
+        self._app.on_startup.append(
+            lambda app: app['tasks'].append(
+                app.loop.create_task(self._rtm_client.rtm_connect())))
+        self._app.on_startup.append(
+            lambda app: app['tasks'].append(
+                app.loop.create_task(self.rtm_read())))
 
     @property
     def bot_id(self):
@@ -45,7 +51,7 @@ class SirBot:
             logger.debug('Function is not a coroutine, converting.')
             wrapped = asyncio.coroutine(wrapped)
         logger.debug('Registering listener for "%s"', matchstr)
-        self.commands['listen'][re.compile(matchstr, flags)] = func
+        self.commands['listen'][re.compile(matchstr, flags)] = wrapped
 
         # Return original func
         return func
@@ -124,7 +130,6 @@ class SirBot:
         await self._plugin_dispatcher(message)
 
     async def _plugin_dispatcher(self, msg):
-
         for matcher, func in self.commands['listen'].items():
             n = matcher.search(msg.text)
             if n:
@@ -143,15 +148,4 @@ class SirBot:
                 message=message, method='update')
 
     def run(self):
-        tasks = [
-            self.loop.create_task(self._rtm_client.rtm_connect()),
-            self.loop.create_task(self.rtm_read())
-        ]
-        try:
-            self.loop.run_forever()
-        except KeyboardInterrupt:
-            pass
-        finally:
-            for task in tasks:
-                task.cancel()
-            self.loop.close()
+        web.run_app(self._app, host=self._host, port=self._port)

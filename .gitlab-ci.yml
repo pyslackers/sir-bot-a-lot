@@ -8,14 +8,12 @@ stages:
 lint:
   stage: build
   script:
-  - pip install flake8
-  - python -m flake8
+  - python setup.py flake8
 
 test:
   stage: test
   script:
-  - pip install -r requirements.txt
-  - python -m pytest tests/
+  - python setup.py test
 
 staging:
   type: deploy

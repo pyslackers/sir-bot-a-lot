@@ -9,8 +9,8 @@ token = os.environ['SIRBOT_TOKEN']
 
 bot = SirBot(token=token)
 
-logging.getLogger('sirbot').setLevel(logging.DEBUG)
 logging.basicConfig()
+logging.getLogger('sirbot').setLevel(logging.DEBUG)
 
 
 # Example quote of the day plugin
