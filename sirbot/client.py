@@ -14,10 +14,68 @@ class SlackConnectionError(Exception):
 
 
 class HTTPClient:
-    pass
+    def __init__(self, token, *, loop=None):
+        self.api_root = 'https://slack.com/api/{0}'
+        self.api_post_msg = self.api_root.format('chat.postMessage')
+        self.api_update_msg = self.api_root.format('chat.update')
+        self.token = token
+        self.session = aiohttp.ClientSession()
+        self.loop = loop or asyncio.get_event_loop()
+
+    async def send(self, message, method='send', timestamp=None):
+        if method == 'send':
+            logger.debug('Message Sent: {}'.format(message))
+            url = self.api_post_msg
+        elif method == 'update':
+            logger.debug('Message Update: {}'.format(message))
+            url = self.api_update_msg
+        else:
+            logger.warning('Invalid method')
+            raise SlackConnectionError
+
+        msg = self._prepare_message(message, timestamp)
+        message.timestamp = await self._send_message(msg, url)
+
+    def _prepare_message(self, message, timestamp):
+        msg = message.dump()
+        msg['token'] = self.token
+        if msg.get('text') is None and msg.get('attachments') is None:
+            logger.debug('Can not send msg. No text or attachments.')
+            raise SlackConnectionError('No text or attachments')
+        if timestamp:
+            msg['ts'] = timestamp
+
+        return msg
+
+    async def _send_message(self, msg, url):
+        async with self.session.post(url, data=msg) as response:
+            if 200 <= response.status < 300:
+                rep = await response.json()
+                if rep['ok'] is True:
+                    logger.debug('Message API response: {}'.format(rep))
+                elif rep['ok'] is False:
+                    logger.warning(
+                        'Can not send message:'
+                        '{}, {}'.format(rep.get('error'), rep))
+                return rep.get('ts')
+            elif 400 <= response.status < 500:
+                e = 'There was a slack client error: ' \
+                    '{}'.format(response.status)
+                logging.error(e)
+                raise SlackConnectionError(e)
+            elif 400 <= response.status:
+                e = 'There was a slack server error: ' \
+                    '{}'.format(response.status)
+                logging.error(e)
+                raise SlackConnectionError(e)
+            else:
+                e = 'There was a slack unknown error: ' \
+                    '{}'.format(response.status)
+                logging.error(e)
+                raise SlackConnectionError(e)
 
 
-class Client:
+class RTMClient:
     def __init__(self, token, *, loop=None):
         self.ws = None
         self.loop = loop or asyncio.get_event_loop()
@@ -74,22 +132,28 @@ class Client:
                     break
 
                 msg = json.loads(msg)
-
                 if msg.get('type') == 'message':
                     logger.debug('Message Received: %s', msg)
                     await self.queue.put(msg)
+                elif msg.get('ok') is True:
+                    logger.debug('Message API response: {}'.format(msg))
+                elif msg.get('ok') is False:
+                    logger.warning(
+                        'Can not send message:{}, {}'.format(msg.get('error'),
+                                                             msg))
         else:
             raise Exception('Error with slack {}'.format(self._login_data))
 
-    async def post_message(self, msg):
-
+    async def send_message(self, message, method='send', *args, **kwargs):
+        if method == 'update':
+            logger.warning('RTMClient does not support message update')
         data = {
             'type': 'message',
-            'channel': msg.to.id,
-            'text': msg.text
+            'channel': message.to.id,
+            'text': message.text
         }
-        content = json.dumps(data)
-        await self.ws.send(content)
+        logger.debug('Message Sent: {}'.format(message))
+        await self.ws.send(json.dumps(data))
 
     def run(self):
         try:

@@ -4,14 +4,13 @@ import os
 import aiohttp
 
 from sirbot import SirBot
-from sirbot.base import Message
 
 token = os.environ['SIRBOT_TOKEN']
 
-bot = SirBot(token)
-
+bot = SirBot(token=token)
 
 logging.getLogger('sirbot').setLevel(logging.DEBUG)
+logging.basicConfig()
 
 
 # Example quote of the day plugin
@@ -35,10 +34,14 @@ async def get_quote_of_the_day():
 @bot.listen('(([Cc]an|[Mm]ay) I have the )?quote of the day\?$')
 async def quote_of_the_day(message, *args, **kwargs):
     quote = await get_quote_of_the_day()
-    response = Message(quote)
-    response.to = message.to
+    message.text = quote
+    await bot.send(message)
 
-    await bot._rtm_client.post_message(response)
+
+@bot.listen('test message')
+async def test_message(message, *args, **kwargs):
+    message.text = 'Hello'
+    await bot.send(message)
 
 
 if __name__ == '__main__':

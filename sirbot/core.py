@@ -4,16 +4,16 @@ import asyncio
 import functools
 
 from sirbot.base import Message, User, Channel
-from .client import Client
+from .client import RTMClient, HTTPClient
 
 logger = logging.getLogger('sirbot')
 
 
 class SirBot:
-
     def __init__(self, token, *, loop=None):
         self.loop = loop or asyncio.get_event_loop()
-        self._rtm_client = Client(token)
+        self._rtm_client = RTMClient(token)
+        self._http_client = HTTPClient(token)
         self.commands = {
             'listen': {}
         }
@@ -129,7 +129,18 @@ class SirBot:
             n = matcher.search(msg.text)
             if n:
                 logger.debug('Located handler for text, invoking')
-                await func(msg, n.groups())
+                rep = Message(to=msg.to, frm=msg.frm, incoming=msg)
+                await func(rep, n.groups())
+
+    async def send(self, *messages):
+        for message in messages:
+            message.timestamp = await self._http_client.send(
+                message=message, method="send")
+
+    async def update(self, *messages):
+        for message in messages:
+            message.timestamp = await self._http_client.send(
+                message=message, method='update')
 
     def run(self):
         tasks = [

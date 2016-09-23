@@ -17,6 +17,9 @@ class User(Receiver):
     def id(self):
         return self._user_id
 
+    def __str__(self):
+        return self.id
+
 
 class Channel(Receiver):
     def __init__(self, channel_id):
@@ -26,6 +29,9 @@ class Channel(Receiver):
     def id(self):
         return self._channel_id
 
+    def __str__(self):
+        return self.id
+
 
 class Message:
     def __init__(self,
@@ -33,11 +39,14 @@ class Message:
                  frm: Receiver=None,
                  to: Receiver=None,
                  data=Mapping,
-                 history=None):
+                 history=None,
+                 incoming=None):
         self._text = text
         self._from = frm
         self._to = to
         self._data = data or {}
+        self.timestamp = 0
+        self.incoming = incoming
 
         if history:
             self.ctx = history.ctx
@@ -76,7 +85,8 @@ class Message:
         return self._from
 
     def __str__(self):
-        return self._text
+        return "<{} - {} - {} - {}>".format(self.__class__.__name__, self._to,
+                                            self._from, self._text)
 
     @property
     def is_direct_msg(self) -> bool:
@@ -85,3 +95,9 @@ class Message:
     @property
     def is_channel_msg(self):
         return isinstance(self.to, Channel)
+
+    def dump(self):
+        return {'text': self._text,
+                'channel': self.to.id,
+                'ts': self.timestamp
+                }
