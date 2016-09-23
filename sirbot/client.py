@@ -37,7 +37,7 @@ class HTTPClient:
         message.timestamp = await self._send_message(msg, url)
 
     def _prepare_message(self, message, timestamp):
-        msg = message.dump()
+        msg = message.serialize()
         msg['token'] = self.token
         if msg.get('text') is None and msg.get('attachments') is None:
             logger.debug('Can not send msg. No text or attachments.')
