@@ -80,7 +80,7 @@ class Content(Serializer):
 
 class Message(Serializer):
     def __init__(self,
-                 text: str=None,
+                 text: str='',
                  frm: Receiver=None,
                  to: Receiver=None,
                  history=None,
@@ -171,7 +171,7 @@ class Message(Serializer):
 
     def serialize(self):
         data = self.content.serialize()
-        if data.get('text') is None or data.get('attachments') is None:
+        if data.get('text') is False and data.get('attachments') is None:
             logger.warning('Message must have text or an attachments')
             raise MessageError('No text or attachments')
         data['channel'] = self.to.id
