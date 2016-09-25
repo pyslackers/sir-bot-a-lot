@@ -7,9 +7,7 @@ logger = logging.getLogger('sirbot')
 
 class Attachment(Serializer):
     def __init__(self, fallback, **kwargs):
-        self.data = {'fields': list(),
-                     'actions': list(),
-                     'mrkdwn_in': ["pretext", "text", "fields"],
+        self.data = {'mrkdwn_in': ["pretext", "text", "fields"],
                      'fallback': fallback}
         self.fields = list()
         self.actions = list()
@@ -20,6 +18,8 @@ class Attachment(Serializer):
             self.data[item] = value
 
     def serialize(self):
+        self.data['fields'] = list()
+        self.data['actions'] = list()
         for field in self.fields:
             self.data['fields'].append(field.serialize())
         for action in self.actions:

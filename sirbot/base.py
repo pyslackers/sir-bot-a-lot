@@ -30,12 +30,20 @@ class User(Receiver):
 
 
 class Channel(Receiver):
-    def __init__(self, channel_id):
+    def __init__(self, channel_id, name, **kwargs):
         self._channel_id = channel_id
+        self.name = name
+        self.data = dict()
+        self._add(**kwargs)
 
     @property
     def id(self):
         return self._channel_id
+
+    def _add(self, **kwargs):
+        for item, value in kwargs.items():
+            if item != 'id':
+                self.data[item] = value
 
     def __str__(self):
         return self.id
@@ -52,8 +60,7 @@ class Serializer(ABC):
 class Content(Serializer):
     def __init__(self, **kwargs):
         self.timestamp = None
-        self.data = {'attachments': list(),
-                     'as_user': True,
+        self.data = {'as_user': True,
                      'icon_emoji': ':robot_face:'}
         self.channel = None
         self.attachments = list()
@@ -72,6 +79,7 @@ class Content(Serializer):
             self.data[item] = value
 
     def serialize(self):
+        self.data['attachments'] = list()
         for attachment in self.attachments:
             self.data['attachments'].append(attachment.serialize())
         self.data['attachments'] = json.dumps(self.data['attachments'])
@@ -85,24 +93,25 @@ class Message(Serializer):
                  to: Receiver=None,
                  history=None,
                  incoming=None,
+                 timestamp=0,
                  content: Content = None):
         self._from = frm
         self._to = to
-        self.timestamp = 0
+        self.timestamp = timestamp
         self.incoming = incoming
         self.content = content or Content()
         self.content.text = text
+        self._reactions = None
 
         if history:
             self.ctx = history.ctx
         else:
             self.ctx = {}
 
-    def clone(self):
-        return Message(content=self.content,
-                       frm=self._from,
-                       to=self._to,
-                       )
+    def clone(self, to: Receiver=None):
+        return Message(frm=self._from,
+                       to=to or self.to,
+                       content=self.content)
 
     @property
     def to(self) -> Receiver:
@@ -158,8 +167,11 @@ class Message(Serializer):
             self.content.data['icon_url'] = icon
 
     def __str__(self):
-        return "<{} - {} - {} - {}>".format(self.__class__.__name__, self._to,
-                                            self._from, self.text)
+        return "<{} - {} - {} - {} - {}>".format(self.__class__.__name__,
+                                                 self._to,
+                                                 self._from,
+                                                 self.timestamp,
+                                                 self.content)
 
     @property
     def is_direct_msg(self) -> bool:

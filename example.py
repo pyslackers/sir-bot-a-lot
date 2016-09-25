@@ -75,5 +75,10 @@ async def test_message(message, *args, **kwargs):
     await bot.send(message)
 
 
+@bot.listen('sirbot')
+async def react(message, *args, **kwargs):
+    reaction = 'robot_face'
+    await bot.add_reaction([message.incoming, reaction])
+
 if __name__ == '__main__':
     bot.run()
