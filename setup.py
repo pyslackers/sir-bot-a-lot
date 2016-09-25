@@ -1,17 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import codecs
-import os
+from pathlib import Path
+import sys
 
-from setuptools import setup
+from setuptools import setup, convert_path
 
-from sirbot import DATA
 
-with open('README.md') as readme_file:
-    readme = readme_file.read()
+if sys.version_info < (3, 5):
+    raise RuntimeError('SirBot requires Python 3.5+')
 
-with open('HISTORY.md') as history_file:
-    history = history_file.read()
+
+def load_package_meta():
+    meta_path = convert_path('./sirbot/__meta__.py')
+    meta_ns = {}
+    with open(meta_path) as f:
+        exec(f.read(), meta_ns)
+    return meta_ns['DATA']
+
+
+PKG_META = load_package_meta()
+
 
 requirements = [
     'Click>=6.0',
@@ -43,20 +52,21 @@ def parse_reqs(req_path='./requirements.txt'):
 def parse_readme():
     """Parse contents of the README."""
     # Get the long description from the relevant file
-    here = os.path.abspath(os.path.dirname(__file__))
-    readme_path = os.path.join(here, 'README.md')
-    with codecs.open(readme_path, encoding='utf-8') as handle:
+    readme_file = str(Path(__file__).parent / 'README.md')
+    with codecs.open(readme_file, encoding='utf-8') as handle:
         long_description = handle.read()
 
     return long_description
 
-test_requirements = [
-    # TODO: put package test requirements here
-]
 
 setup(
     long_description=parse_readme(),
-    keywords='sirbot',
+    keywords=[
+        'sirbot',
+        'chatbot',
+        'bot',
+        'slack',
+    ],
     packages=[
         'sirbot',
     ],
@@ -67,18 +77,24 @@ setup(
     # "scripts" keyword. Entry points provide cross-platform support and
     # allow pip to create the appropriate form of executable for the
     # target platform.
-    entry_points={
-        'console_scripts': [
-            'sirbot=sirbot.cli:main'
-        ]
-    },
+    # entry_points={
+    #     'console_scripts': [
+    #         'sirbot=sirbot.cli:main'
+    #     ]
+    # },
     # If there are data files included in your packages that need to be
     # installed, specify them here.
     include_package_data=True,
     install_requires=parse_reqs(),
     zip_safe=False,
-    test_suite='tests',
-    tests_require=test_requirements,
+    tests_require=[
+        'pytest',
+        'pytest-aiohttp',
+    ],
+    setup_requires=[
+        'pytest-runner',
+        'flake8',
+    ],
     # See: http://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
@@ -90,14 +106,14 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Environment :: Console',
     ],
-    author=DATA['author'],
-    docker_name=DATA['docker_name'],
-    docker_tag=DATA['docker_tag'],
-    author_email=DATA['author_email'],
-    copyright=DATA['copyright'],
-    description=DATA['description'],
-    license=DATA['license'],
-    name=DATA['name'],
-    url=DATA['url'],
-    version=DATA['version'],
+    author=PKG_META['author'],
+    # docker_name=PKG_META['docker_name'],
+    # docker_tag=PKG_META['docker_tag'],
+    author_email=PKG_META['author_email'],
+    # copyright=PKG_META['copyright'],
+    description=PKG_META['description'],
+    license=PKG_META['license'],
+    name=PKG_META['name'],
+    url=PKG_META['url'],
+    version=PKG_META['version'],
 )
