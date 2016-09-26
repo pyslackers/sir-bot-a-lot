@@ -52,7 +52,7 @@ async def test_message(message, *args, **kwargs):
     message.icon = ':tada:'
     att = Attachment(title='Carter',
                      fallback='A test attachment',
-                     image_url='http://imgs.xkcd.com/comics/regex_golf.png',
+                     image_url='http://imgs.xkcd.com/comics/twitter_bot.png',
                      )
 
     f1 = Field(title='Field1', value='A short field', short=True)
