@@ -12,10 +12,7 @@ logger = logging.getLogger('sirbot')
 
 
 class SirBot:
-    def __init__(self, token, *, host: str = '0.0.0.0', port: int = 8080,
-                 loop: asyncio.AbstractEventLoop = None):
-        self._host = host
-        self._port = port
+    def __init__(self, token, *, loop: asyncio.AbstractEventLoop = None):
         self.loop = loop or asyncio.get_event_loop()
         self._rtm_client = RTMClient(token)
         self._http_client = HTTPClient(token)
@@ -193,5 +190,5 @@ class SirBot:
             await self._http_client.get_channels()
         logger.info('Available channels: {}'.format(self.channels))
 
-    def run(self):
-        web.run_app(self._app, host=self._host, port=self._port)
+    def run(self, host: str='0.0.0.0', port: int=8080):
+        web.run_app(self._app, host=host, port=port)
