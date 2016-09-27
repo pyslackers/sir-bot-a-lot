@@ -81,4 +81,5 @@ async def react(message, *args, **kwargs):
     await bot.add_reaction([message.incoming, reaction])
 
 if __name__ == '__main__':
-    bot.run()
+    port = int(os.getenv('PORT', 8080))
+    bot.run(port=port)
