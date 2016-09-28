@@ -32,13 +32,13 @@ You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://gitlab.com/mikefromit/sir-bot-a-lot
+    $ git clone git://gitlab.com/PythonDevCommunity/sir-bot-a-lot
 
 Or download the `tarball`_:
 
 .. code-block:: console
 
-    $ curl  -OL https://gitlab.com/mikefromit/sir-bot-a-lot/tarball/master
+    $ curl  -OL https://gitlab.com/PythonDevCommunity/sir-bot-a-lot/tarball/master
 
 Once you have a copy of the source, you can install it with:
 
@@ -47,5 +47,5 @@ Once you have a copy of the source, you can install it with:
     $ python setup.py install
 
 
-.. _gitlab repo: https://gitlab.com/mikefromit/sir-bot-a-lot
-.. _tarball: https://gitlab.com/mikefromit/sir-bot-a-lot/tarball/master
+.. _gitlab repo: https://gitlab.com/PythonDevCommunity/sir-bot-a-lot
+.. _tarball: https://gitlab.com/PythonDevCommunity/sir-bot-a-lot/tarball/master

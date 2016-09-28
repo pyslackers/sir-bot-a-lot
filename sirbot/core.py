@@ -44,7 +44,27 @@ class SirBot:
     def bot_id(self):
         return self._rtm_client._login_data['self']['id']
 
+    @property
+    def app(self):
+        """Return the composed aiohttp application"""
+        return self._app
+
     def listen(self, matchstr, flags=0, func=None):
+        """
+        DEPRECATED
+
+        Decorator to register a plugin method. The plugin method will be called
+        with a Message object and the message can be replied to with methods on
+        the SirBot instance.
+
+        This has been deprecated in favor of an upcoming plugin API (where the
+        server will discover and use installed/available plugins).
+
+        :param matchstr: The string (regex) to match in messages
+        :param flags: Regex flags to use
+        :param func: Function to call, note: this will be auto-resolved.
+        :return: Original function, unmodified.
+        """
         if func is None:
             logger.debug('No function provided, providing a partial.')
             return functools.partial(self.listen, matchstr, flags)
@@ -74,10 +94,10 @@ class SirBot:
         logger.debug('Dispatcher received message %s' % msg)
         subtype = msg.get('subtype', None)
 
-        if subtype == u'message_changed':
+        if subtype == 'message_changed':
             logger.debug('Ignoring changed message subtype')
             return
-        elif subtype == u'message_deleted':
+        elif subtype == 'message_deleted':
             logger.debug('Ignoring deleted message subtype')
             return
         elif subtype == 'channel_join':
