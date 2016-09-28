@@ -1,6 +1,6 @@
 ---
 site_name: sirbot Docs
-repo_url: https://gitlab.com/mikefromit/sir-bot-a-lot
+repo_url: https://gitlab.com/PythonDevCommunity/sir-bot-a-lot
 dev_addr: "0.0.0.0:4000"
 theme: bootstrap
 docs_dir: docs

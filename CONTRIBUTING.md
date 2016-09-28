@@ -37,7 +37,7 @@ If you have any issues with [Git Hygiene](#git-hygiene) might help.
 
 ### Report Bugs
 
-Report bugs at https://gitlab.com/mikefromit/sir-bot-a-lot/issues.
+Report bugs at https://gitlab.com/PythonDevCommunity/sir-bot-a-lot/issues.
 
 If you are reporting a bug, please include:
 
@@ -63,7 +63,7 @@ articles, and such.
 
 ### Submit Feedback
 
-The best way to send feedback is to file an issue at https://gitlab.com/mikefromit/sir-bot-a-lot/issues.
+The best way to send feedback is to file an issue at https://gitlab.com/PythonDevCommunity/sir-bot-a-lot/issues.
 
 If you are proposing a feature:
 

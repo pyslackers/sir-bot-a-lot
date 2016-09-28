@@ -17,7 +17,7 @@ logging.getLogger('sirbot').setLevel(logging.DEBUG)
 # Example quote of the day plugin
 async def get_quote_of_the_day():
     url = 'http://api.theysaidso.com/qod.json'
-    quote_r = ''
+    quote_r = {}
     async with aiohttp.get(url) as response:
         if response.status != 200:
             raise Exception('Error talking to quote api')
@@ -79,6 +79,7 @@ async def test_message(message, *args, **kwargs):
 async def react(message, *args, **kwargs):
     reaction = 'robot_face'
     await bot.add_reaction([message.incoming, reaction])
+
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 8080))
