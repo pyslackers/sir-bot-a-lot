@@ -2,7 +2,7 @@
 
 :+1::tada: First off, thanks for taking the time to contribute! :tada:
 
-Contributions are welcome by anybody and everybody. We are not kidding! 
+Contributions are welcome by anybody and everybody. We are not kidding!
 
 The rest of this document will be guidelines to contributing to the project. Remember that these are just guidelines, not rules. Use common sense as much as possible.
 
@@ -19,7 +19,7 @@ The rest of this document will be guidelines to contributing to the project. Rem
 - [Get Started](#get-started)
 - [Git Hygiene](#git-hygiene)
   - [Squash Commits](#squash-commits)
-  - [Handling Merge Conflicts](#handling-merge-conflicts)    
+  - [Handling Merge Conflicts](#handling-merge-conflicts)
 
 
 ## Pull Request Guidelines
@@ -121,7 +121,7 @@ Ready to contribute? Here's how to set up `sir-bot-a-lot` for local development.
 
 - Interactive rebase (`git rebase -i`) will open your default editor in which you can replace `pick` with `fixup` or `f` to combine commits (you can also use this to reorder commits, mark commits to edit their commit messages, and other powerful tools which are explained in the file itself). Save the changes, and git will execute the rebase.
 
-After rebasing, if your branch is already pushed up to GitHub, you'll have to force push the changes using `git push -f`, since the history has changed.
+After rebasing, if your branch is already pushed up to GitLab, you'll have to force push the changes using `git push -f`, since the history has changed.
 
 Do you have any questions ?
 
