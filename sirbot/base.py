@@ -17,7 +17,13 @@ class Receiver(ABC):
 
 
 class User(Receiver):
+    """
+    Class representing an user.
+    """
     def __init__(self, user_id=None, channel_id=None):
+        """
+        :param user_id: id of the user
+        """
         self._user_id = user_id
         self._channel_id = channel_id
 
@@ -30,7 +36,14 @@ class User(Receiver):
 
 
 class Channel(Receiver):
+    """
+    Class representing a channel.
+    """
     def __init__(self, channel_id, name, **kwargs):
+        """
+        :param channel_id: id of the channel
+        :param name: name of the channel
+        """
         self._channel_id = channel_id
         self.name = name
         self.data = dict()
@@ -52,12 +65,17 @@ class Channel(Receiver):
 class Serializer(ABC):
     def serialize(self):
         """
-        Dump the action content correctly formatted
-        for the slack web API inside an attachment
+        Dump the content correctly formatted for the slack web API
         """
 
 
 class Content(Serializer):
+    """
+    Content of a message.
+
+    Independent of the channel/user.
+    Can be use in multiple message.
+    """
     def __init__(self, **kwargs):
         self.timestamp = None
         self.data = {'as_user': True,
@@ -87,6 +105,9 @@ class Content(Serializer):
 
 
 class Message(Serializer):
+    """
+    Class representing a message.
+    """
     def __init__(self,
                  text: str='',
                  frm: Receiver=None,
@@ -109,12 +130,26 @@ class Message(Serializer):
             self.ctx = {}
 
     def clone(self, to: Receiver=None):
+        """
+        Clone the message
+
+        :param to: Receiver of the new message
+        :type to: Receiver
+        :return: Clone of the original message
+        :rtype: Message
+        """
         return Message(frm=self._from,
                        to=to or self.to,
                        content=self.content)
 
     @property
     def to(self) -> Receiver:
+        """
+        Channel Receiver
+
+        Channel where the message was posted
+        or where it is going to be posted
+        """
         return self._to
 
     @to.setter
@@ -124,6 +159,9 @@ class Message(Serializer):
 
     @property
     def frm(self) -> Receiver:
+        """
+        User posting the message
+        """
         return self._from
 
     @frm.setter
@@ -132,6 +170,11 @@ class Message(Serializer):
 
     @property
     def text(self) -> str:
+        """
+        Text of the Message
+
+        Shortcut to access 'self.content.text'
+        """
         return self.content.text
 
     @text.setter
@@ -140,6 +183,11 @@ class Message(Serializer):
 
     @property
     def attachments(self):
+        """
+        Attachments of the Message
+
+        Shortcut to access 'self.content.attachments'
+        """
         return self.content.attachments
 
     @property
@@ -148,19 +196,48 @@ class Message(Serializer):
 
     @property
     def username(self) -> str:
+        """
+        Username used by the bot for this message if not default
+
+        Shortcut to access 'self.content.data['username']'
+        """
         return self.content.data['username']
 
     @username.setter
     def username(self, username: str):
+        """
+        Change the username of the bot for this message only.
+
+        The as_user variable must be set to False.
+        """
         self.content.data['as_user'] = False
         self.content.data['username'] = username
 
     @property
     def icon(self) -> str:
+        """
+        Icon used by the bot for this message if not default
+
+        Shortcut to access 'self.content.data['icon_emoji']'
+        or 'self.content.data['icon_url']'.
+        If both value are set 'icon_emoji' is used first by the
+        Slack API.
+        """
         return self.content.data['icon_emoji'] or self.content.data['icon_url']
 
     @icon.setter
     def icon(self, icon: str):
+        """
+        Change the avatar of the bot for this message only.
+
+        Change the bot avatar to an emoji or url to an image
+        (See Slack API documentation for more information
+        about the image size)
+        The username attribute must be set for this to work.
+
+        :param icon: emoji or url to use
+        :type icon: str
+        """
         if icon.startswith(':'):
             self.content.data['icon_emoji'] = icon
         else:

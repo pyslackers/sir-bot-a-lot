@@ -46,28 +46,59 @@ class HTTPClient:
         self.loop = loop or asyncio.get_event_loop()
 
     async def delete(self, message):
+        """
+        Delete a previously sent message
+
+        :param message: Message previously sent
+        :type message: Message
+        :return: Timestamp of the message
+        """
         logger.debug('Message Delete: {}'.format(message))
-        msg = message.serialize()
-        msg['token'] = self.token
-        rep = await self._post_message(msg, self.api_delete_msg)
+        msg = self._prepare_message(message)
+        rep = await self._query_api(msg, self.api_delete_msg)
         return rep.get('ts')
 
-    async def send(self, message, method='send', timestamp=None):
-        if method == 'send':
-            logger.debug('Message Sent: {}'.format(message))
-            url = self.api_post_msg
-        elif method == 'update':
-            logger.debug('Message Update: {}'.format(message))
-            url = self.api_update_msg
-        else:
-            logger.warning('Invalid method')
-            raise SlackConnectionError
+    async def send(self, message):
+        """
+        Send a new message
 
-        msg = self._prepare_send_message(message, timestamp)
-        rep = await self._post_message(msg, url)
+        :param message: Message to send
+        :type message: Message
+        :return: Timestamp of the message
+        """
+        logger.debug('Message Sent: {}'.format(message))
+        url = self.api_post_msg
+        msg = self._prepare_message(message)
+        rep = await self._query_api(msg, url)
         return rep.get('ts')
 
-    def _prepare_send_message(self, message, timestamp):
+    async def update(self, message, timestamp=None):
+        """
+        Update a previously sent message
+
+        If no timestamp if provided we assumed the timestamp of the previous
+        message is stored in the new message. This enable the update of a
+        message without creating a new message.
+
+        :param message: New message
+        :param timestamp: Timestamp of the message to update
+        :return: Timestamp of the message
+        """
+        logger.debug('Message Update: {}'.format(message))
+        url = self.api_update_msg
+        msg = self._prepare_message(message, timestamp)
+        rep = await self._query_api(msg, url)
+        return rep.get('ts')
+
+    def _prepare_message(self, message, timestamp=None):
+        """
+        Format the message for the Slack API
+
+        :param message: Message to send/update/delete
+        :param timestamp: Timestamp of the message
+        :return: Formatted msg
+        :rtype: dict
+        """
         msg = message.serialize()
         msg['token'] = self.token
         if timestamp:
@@ -75,7 +106,16 @@ class HTTPClient:
 
         return msg
 
-    async def _post_message(self, msg, url):
+    async def _query_api(self, msg, url):
+        """
+        Query the Slack API and check the response for error.
+
+        :param msg: payload to send
+        :param url: url for the request
+        :type msg: dict
+        :return: Slack API Response
+        :rtype: dict
+        """
         async with self.session.post(url, data=msg) as response:
             if 200 <= response.status < 300:
                 rep = await response.json()
@@ -95,31 +135,77 @@ class HTTPClient:
                 raise SlackConnectionError(e)
             elif 500 <= response.status < 600:
                 e = 'Server error, status code: {}'.format(response.status)
+                raise SlackServerError(e)
 
     async def add_reaction(self, message, reaction='thumbsup'):
+        """
+        Add a reaction to a message
+
+        See Slack API documentation and team settings for available reaction
+
+        :param message: Message to add reaction to
+        :param reaction: Reaction to add
+        """
         msg = self._prepare_reaction(message, reaction)
         logger.debug('Reaction Add: {}'.format(msg))
-        await self._post_message(msg, self.api_add_react)
+        await self._query_api(msg, self.api_add_react)
 
     async def delete_reaction(self, message, reaction):
+        """
+        Delete a reaction from a message
+
+        :param message: Message to delete reaction from
+        :param reaction: Reaction to delete
+        """
         msg = self._prepare_reaction(message, reaction)
         logger.debug('Reaction Delete: {}'.format(msg))
-        await self._post_message(msg, self.api_delete_react)
+        await self._query_api(msg, self.api_delete_react)
 
     async def get_reaction(self, message):
+        """
+        Query all the reactions of a message
+
+        :param message: Message to query reaction from
+        :return: List of dictionary with the reaction name, count and users
+        as keys
+        :rtype: list
+        """
         msg = self._prepare_reaction(message)
-        msg['full'] = True
+        msg['full'] = True  # Get all the message information
         logger.debug('Reaction Get: {}'.format(msg))
-        rep = await self._post_message(msg, self.api_get_react)
+        rep = await self._query_api(msg, self.api_get_react)
         return rep.get('message').get('reactions')
 
+    def _prepare_reaction(self, message, reaction=''):
+        """
+        Format the message and reaction for the Slack API
+
+        :param message: Message to add/delete/get reaction
+        :param reaction: Reaction to add/delete
+        :return: Formatted message
+        :rtype: dict
+        """
+        msg = message.serialize()
+        msg['token'] = self.token
+        msg['name'] = reaction
+        msg['timestamp'] = msg['ts']
+        return msg
+
     async def get_channels(self):
+        """
+        Query all available channels in the teams and identify in witch
+        channel the bot is present.
+
+        :return: two list of channels. First one contain the channels where the
+        bot is present. Second one contain all the available channels of the
+        team.
+        """
         logging.debug('Getting channels')
         all_channels = []
         bot_channels = []
 
         msg = {'token': self.token}
-        rep = await self._post_message(msg, self.api_get_channel)
+        rep = await self._query_api(msg, self.api_get_channel)
         for chan in rep.get('channels'):
             channel = Channel(channel_id=chan['id'], **chan)
             all_channels.append(channel)
@@ -127,13 +213,6 @@ class HTTPClient:
                 bot_channels.append(channel)
 
         return bot_channels, all_channels
-
-    def _prepare_reaction(self, message, reaction=''):
-        msg = message.serialize()
-        msg['token'] = self.token
-        msg['name'] = reaction
-        msg['timestamp'] = msg['ts']
-        return msg
 
 
 class RTMClient:
