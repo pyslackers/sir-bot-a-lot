@@ -119,7 +119,8 @@ class Message(Serializer):
 
     @to.setter
     def to(self, to: Receiver):
-        self._to = to
+        if isinstance(to, (User, Channel)):
+            self._to = to
 
     @property
     def frm(self) -> Receiver:

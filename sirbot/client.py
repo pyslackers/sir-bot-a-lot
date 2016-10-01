@@ -115,18 +115,18 @@ class HTTPClient:
 
     async def get_channels(self):
         logging.debug('Getting channels')
-        all_channels = dict()
-        channels = dict()
+        all_channels = []
+        bot_channels = []
 
         msg = {'token': self.token}
         rep = await self._post_message(msg, self.api_get_channel)
         for chan in rep.get('channels'):
             channel = Channel(channel_id=chan['id'], **chan)
-            all_channels[chan['id']] = channel
+            all_channels.append(channel)
             if chan.get('is_member'):
-                channels[chan['id']] = channel
+                bot_channels.append(channel)
 
-        return channels, all_channels
+        return bot_channels, all_channels
 
     def _prepare_reaction(self, message, reaction=''):
         msg = message.serialize()
@@ -183,24 +183,29 @@ class RTMClient:
         if self._login_data.get('ok'):
             ws_url = self._login_data['url']
             self.ws = await websockets.connect(ws_url)
-            logger.debug('login data ok')
 
             while not self.is_closed:
                 msg = await self.ws.recv()
-
                 if msg is None:
                     break
 
                 msg = json.loads(msg)
-                if msg.get('type') == 'message':
+                msg_type = msg.get('type')
+                ok = msg.get('ok')
+
+                if msg_type == 'hello':
+                    logger.debug('login data ok')
+                elif msg_type == 'message':
                     logger.debug('Message Received: %s', msg)
-                    await self.queue.put(msg)
-                elif msg.get('ok') is True:
-                    logger.debug('Message API response: {}'.format(msg))
-                elif msg.get('ok') is False:
-                    logger.warning(
-                        'Can not send message:{}, {}'.format(msg.get('error'),
-                                                             msg))
+                elif ok is True:
+                    logger.debug('API response: %s', msg)
+                elif ok is False:
+                    logger.warning('API error: %s, %s', msg.get('error'), msg)
+                else:
+                    logger.debug('Event Received: %s', msg)
+
+                await self.queue.put(msg)
+
         else:
             raise SlackConnectionError(
                 'Error with slack {}'.format(self._login_data))

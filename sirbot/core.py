@@ -5,8 +5,9 @@ import functools
 
 from aiohttp import web
 
-from sirbot.base import Message, User
+from sirbot.base import Message, User, Channel
 from .client import RTMClient, HTTPClient
+from .channel import Channels
 
 logger = logging.getLogger('sirbot')
 
@@ -16,14 +17,14 @@ class SirBot:
         self.loop = loop or asyncio.get_event_loop()
         self._rtm_client = RTMClient(token)
         self._http_client = HTTPClient(token)
-        self.channels = None
-        self.all_channels = None
+        self.channels = Channels()
+        self.all_channels = Channels()
         self.commands = {
             'listen': {}
         }
         self.event_handlers = {
             'message': self._message_handler,
-            'channel_created': self._created_channel_handler,
+            'channel': self._channel_handler,
         }
         self.mentioned_regex = re.compile(
             r'^(?:\<@(?P<atuser>\w+)\>:?|(?P<username>\w+)) ?(?P<text>.*)$')
@@ -38,7 +39,7 @@ class SirBot:
                 app.loop.create_task(self.rtm_read())))
         self._app.on_startup.append(
             lambda app: app['tasks'].append(
-                app.loop.create_task(self.get_channel())))
+                app.loop.create_task(self._get_channel())))
 
     @property
     def bot_id(self):
@@ -111,7 +112,10 @@ class SirBot:
             logging.debug('Ignoring non event message %s' % msg)
             return
 
-        event_type = msg['type']
+        if msg['type'].startswith('channel'):
+            event_type = 'channel'
+        else:
+            event_type = msg['type']
 
         event_handler = self.event_handlers.get(event_type)
 
@@ -153,13 +157,39 @@ class SirBot:
         else:
             message.frm = User(user, msg['channel'])
             message.to = self.channels.get(msg['channel'])
-            if message.to is None:
-                raise Exception
 
         await self._plugin_dispatcher(message)
 
-    async def _created_channel_handler(self, msg):
-        logger.debug('Channel created handler received {}'.format(msg))
+    async def _channel_handler(self, msg):
+        logger.debug('Channel handler received %s', msg)
+
+        msg_type = msg['type']
+        try:
+            channel_id = msg['channel'].get('id')
+        except AttributeError:
+            channel_id = msg['channel']
+
+        if msg_type == 'channel_created':
+            channel = Channel(channel_id=channel_id, **msg['channel'])
+            self.all_channels.add(channel)
+        elif msg_type == 'channel_deleted':
+            self.all_channels.delete(channel_id)
+            self.channels.delete(channel_id)
+        elif msg_type == 'channel_joined':
+            channel = self.all_channels.get(channel_id)
+            self.channels.add(channel)
+        elif msg_type == 'channel_left':
+            self.channels.delete(channel_id)
+        elif msg_type == 'channel_archive':
+            self.all_channels.delete(channel_id)
+            self.channels.delete(channel_id)
+        elif msg_type == 'channel_unarchive':
+            # TODO Query the name of the channel
+            channel = Channel(channel_id=channel_id, name=channel_id)
+            self.all_channels.add(channel)
+        else:
+            logger.debug('No channel event handler for this type %s, '
+                         'ignoring ...' % msg_type)
 
     async def _plugin_dispatcher(self, msg):
         for matcher, func in self.commands['listen'].items():
@@ -204,11 +234,13 @@ class SirBot:
             message.reactions = msg_reactions
         return reactions
 
-    async def get_channel(self):
+    async def _get_channel(self):
         logger.debug('Getting channels')
-        self.channels, self.all_channels = \
-            await self._http_client.get_channels()
-        logger.info('Available channels: {}'.format(self.channels))
+        bot_channels, all_channels = await self._http_client.get_channels()
+        self.channels.add(*bot_channels)
+        self.all_channels.add(*all_channels)
+        logger.info('Bot in channels: %s', self.channels.channels.keys())
+        logger.info('All channels: %s', self.all_channels.channels.keys())
 
-    def run(self, host: str='0.0.0.0', port: int=8080):
+    def run(self, host: str = '0.0.0.0', port: int = 8080):
         web.run_app(self._app, host=host, port=port)
