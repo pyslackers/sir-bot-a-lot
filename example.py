@@ -32,6 +32,11 @@ async def get_quote_of_the_day():
 
 @bot.listen('(([Cc]an|[Mm]ay) I have the )?quote of the day\?$')
 async def quote_of_the_day(message, *args, **kwargs):
+    """
+    Quote of the day example.
+
+    Query theysaidso.com API and create of message with an Attachment
+    """
     quote, author, image = await get_quote_of_the_day()
     google_url = 'http://www.google.com/search?q={}'
     attachment = Attachment(fallback='The quote of the day',
@@ -47,6 +52,14 @@ async def quote_of_the_day(message, *args, **kwargs):
 
 @bot.listen('test message')
 async def test_message(message, *args, **kwargs):
+    """
+    Test message
+
+    Create a message with an attachments containing multiple fields, buttons
+    and an image.
+    Confirmation for the 'danger' button
+    Change the username/avatar of the bot
+    """
     message.text = 'A beautiful message'
     message.username = 'BOT'
     message.icon = ':tada:'
@@ -77,6 +90,11 @@ async def test_message(message, *args, **kwargs):
 
 @bot.listen('sirbot')
 async def react(message, *args, **kwargs):
+    """
+    Test reaction
+
+    React to any message containing 'sirbot' with a robot face reaction
+    """
     reaction = 'robot_face'
     await bot.add_reaction([message.incoming, reaction])
 
