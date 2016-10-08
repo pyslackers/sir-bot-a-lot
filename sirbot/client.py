@@ -41,6 +41,7 @@ class HTTPClient:
         self.api_delete_react = self.api_root.format('reactions.remove')
         self.api_get_react = self.api_root.format('reactions.get')
         self.api_get_channel = self.api_root.format('channels.list')
+        self.api_get_channel_info = self.api_root.format('channels.info')
         self.token = token
         self.session = aiohttp.ClientSession()
         self.loop = loop or asyncio.get_event_loop()
@@ -213,6 +214,22 @@ class HTTPClient:
                 bot_channels.append(channel)
 
         return bot_channels, all_channels
+
+    async def get_channels_info(self, channel_id):
+        """
+        Query the information about a channel
+
+        :param channel_id: id of the channel to query
+        :return: information
+        :rtype: dict
+        """
+        msg = {
+            'token': self.token,
+            'channel': channel_id
+        }
+
+        rep = await self._query_api(msg, self.api_get_channel_info)
+        return rep['channel']
 
 
 class RTMClient:

@@ -17,8 +17,8 @@ class SirBot:
         self.loop = loop or asyncio.get_event_loop()
         self._rtm_client = RTMClient(token)
         self._http_client = HTTPClient(token)
-        self.channels = ChannelManager()
-        self.all_channels = ChannelManager()
+        self.channels = ChannelManager(client=self._http_client)
+        self.all_channels = ChannelManager(client=self._http_client)
         self.commands = {
             'listen': {}
         }
@@ -39,7 +39,7 @@ class SirBot:
                 app.loop.create_task(self.rtm_read())))
         self._app.on_startup.append(
             lambda app: app['tasks'].append(
-                app.loop.create_task(self._get_channel())))
+                app.loop.create_task(self._get_channels())))
 
     @property
     def bot_id(self):
@@ -165,7 +165,7 @@ class SirBot:
             message.to = User(msg['channel'])
         else:
             message.frm = User(user, msg['channel'])
-            message.to = self.channels.get(msg['channel'])
+            message.to = await self.channels.get(msg['channel'])
 
         await self._plugin_dispatcher(message)
 
@@ -201,9 +201,12 @@ class SirBot:
             self.all_channels.delete(channel_id)
             self.channels.delete(channel_id)
         elif msg_type == 'channel_unarchive':
-            # TODO Query the name of the channel
             channel = Channel(channel_id=channel_id, name=channel_id)
             self.all_channels.add(channel)
+            await self.all_channels.update(channel)
+        elif msg_type == 'channel_rename':
+            channel = await self.all_channels.get(channel_id)
+            channel.name = msg['channel']['name']
         else:
             logger.debug('No channel event handler for this type %s, '
                          'ignoring ...' % msg_type)
@@ -304,7 +307,6 @@ class SirBot:
         ChannelManager up to date afterwards by processing incoming channel
         event.
         """
-        logger.debug('Getting channels')
         bot_channels, all_channels = await self._http_client.get_channels()
         self.channels.add(*bot_channels)
         self.all_channels.add(*all_channels)
