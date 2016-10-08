@@ -39,7 +39,7 @@ class SirBot:
                 app.loop.create_task(self.rtm_read())))
         self._app.on_startup.append(
             lambda app: app['tasks'].append(
-                app.loop.create_task(self._get_channel())))
+                app.loop.create_task(self._get_channels())))
 
     @property
     def bot_id(self):
@@ -81,10 +81,10 @@ class SirBot:
         return func
 
     async def rtm_read(self):
-        while True:
-            msg = await self._rtm_client.queue.get()
-
-            await self._dispatch_message(msg)
+        rtm_q = self._rtm_client.queue
+        async for message in rtm_q:
+            await self._dispatch_message(message)
+            rtm_q.task_done()
 
     async def _dispatch_message(self, msg):
         """
