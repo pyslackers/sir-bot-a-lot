@@ -4,7 +4,6 @@ import logging
 from urllib.parse import urlencode
 
 import aiohttp
-import websockets
 
 from .base import Channel
 from .queue import IterableQueue
@@ -279,38 +278,26 @@ class RTMClient:
         return self.api_root.format(method)
 
     async def rtm_connect(self, reconnect=False):
-        method = 'rtm.start'
-        self._login_data = await self.api_call(method)
+        try:
+            method = 'rtm.start'
+            self._login_data = await self.api_call(method)
 
-        if self._login_data.get('ok'):
+            if self._login_data.get('ok') is False:
+                raise SlackConnectionError(
+                    'Error with slack {}'.format(self._login_data))
+
             ws_url = self._login_data['url']
-            self.ws = await websockets.connect(ws_url)
-
-            while not self.is_closed:
-                msg = await self.ws.recv()
-                if msg is None:
-                    break
-
-                msg = json.loads(msg)
-                msg_type = msg.get('type')
-                ok = msg.get('ok')
-
-                if msg_type == 'hello':
-                    logger.debug('login data ok')
-                elif msg_type == 'message':
-                    logger.debug('Message Received: %s', msg)
-                elif ok is True:
-                    logger.debug('API response: %s', msg)
-                elif ok is False:
-                    logger.warning('API error: %s, %s', msg.get('error'), msg)
-                else:
-                    logger.debug('Event Received: %s', msg)
-
-                await self.queue.put(msg)
-
-        else:
-            raise SlackConnectionError(
-                'Error with slack {}'.format(self._login_data))
+            async with self.session.ws_connect(ws_url) as ws:
+                async for msg in ws:
+                    if msg.type == aiohttp.WSMsgType.TEXT:
+                        msg = json.loads(msg.data)
+                        await self.queue.put(msg)
+                    elif msg.type == aiohttp.WSMsgType.CLOSED:
+                        break  # noqa
+                    elif msg.type == aiohttp.WSMsgType.ERROR:
+                        break  # noqa
+        except asyncio.CancelledError:
+            pass
 
     async def send_message(self, message, method='send', *args, **kwargs):
         if method == 'update':
