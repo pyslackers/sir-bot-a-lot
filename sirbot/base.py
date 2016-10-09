@@ -45,18 +45,38 @@ class Channel(Receiver):
         :param name: name of the channel
         """
         self._channel_id = channel_id
-        self.name = name
-        self.data = dict()
-        self._add(**kwargs)
+        self._data = {'name': name}
+        self.add(**kwargs)
 
     @property
     def id(self):
         return self._channel_id
 
-    def _add(self, **kwargs):
+    @property
+    def name(self):
+        return self._data['name']
+
+    @name.setter
+    def name(self, name):
+        self._data['name'] = name
+
+    def get(self, *information):
+        """
+        Query information on the channel
+
+        :param information: information needed
+        :return: information
+        :rtype: list
+        """
+        output_information = list()
+        for info in information:
+            output_information.append(self._data.get(info))
+        return output_information
+
+    def add(self, **kwargs):
         for item, value in kwargs.items():
             if item != 'id':
-                self.data[item] = value
+                self._data[item] = value
 
     def __str__(self):
         return self.id
