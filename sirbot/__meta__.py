@@ -6,7 +6,7 @@ DATA = {
                'Nick Humrich <nick.humrich@gmail.com>, '
                'Julioocz <julioocz@gmail.com>, '
                'Shawn McElroy <shawn@skift.io>, '
-               'Sean Johnson <Sean.Johnson@iag.com.au>'),
+               'Sean Johnson <seandavidjohnson@gmail.com>'),
     "author_email": 'pythondev.slack@gmail.com',
     "copyright": 'Copyright 2016 Python Developers Community',
     "description": 'The good Sir Bot a lot',
