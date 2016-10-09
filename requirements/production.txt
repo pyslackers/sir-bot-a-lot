@@ -14,4 +14,3 @@ Sphinx>=1.4.5
 tox>=2.3.1
 uvloop>=0.5.3
 watchdog>=0.8.3
-websockets>=3.2

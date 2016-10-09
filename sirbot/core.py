@@ -30,16 +30,22 @@ class SirBot:
             r'^(?:\<@(?P<atuser>\w+)\>:?|(?P<username>\w+)) ?(?P<text>.*)$')
 
         self._app = web.Application(loop=loop)
-        self._app['tasks'] = []
-        self._app.on_startup.append(
-            lambda app: app['tasks'].append(
-                app.loop.create_task(self._rtm_client.rtm_connect())))
-        self._app.on_startup.append(
-            lambda app: app['tasks'].append(
-                app.loop.create_task(self.rtm_read())))
-        self._app.on_startup.append(
-            lambda app: app['tasks'].append(
-                app.loop.create_task(self._get_channels())))
+        self._app.on_startup.append(self._start_background_tasks)
+        self._app.on_cleanup.append(self._clean_background_tasks)
+
+    async def _start_background_tasks(self, app):
+        app['rtm_connect'] = app.loop.create_task(
+            self._rtm_client.rtm_connect())
+        app['rtm_read'] = app.loop.create_task(self.rtm_read())
+        app['get_channels'] = app.loop.create_task(self._get_channels())
+
+    async def _clean_background_tasks(self, app):
+        app['rtm_connect'].cancel()
+        app['rtm_read'].cancel()
+        app['get_channels'].cancel()
+        await app['rtm_connect']
+        await app['rtm_read']
+        await app['get_channels']
 
     @property
     def bot_id(self):
@@ -81,10 +87,13 @@ class SirBot:
         return func
 
     async def rtm_read(self):
-        rtm_q = self._rtm_client.queue
-        async for message in rtm_q:
-            await self._dispatch_message(message)
-            rtm_q.task_done()
+        try:
+            rtm_q = self._rtm_client.queue
+            async for message in rtm_q:
+                await self._dispatch_message(message)
+                rtm_q.task_done()
+        except asyncio.CancelledError:
+            pass
 
     async def _dispatch_message(self, msg):
         """
@@ -93,35 +102,29 @@ class SirBot:
         :param msg: incoming message
         """
         logger.debug('Dispatcher received message %s' % msg)
-        subtype = msg.get('subtype', None)
+        msg_type = msg.get('type', None)
+        ok = msg.get('ok', None)
 
-        if subtype == 'message_changed':
-            logger.debug('Ignoring changed message subtype')
-            return
-        elif subtype == 'message_deleted':
-            logger.debug('Ignoring deleted message subtype')
-            return
-        elif subtype == 'channel_join':
-            logger.debug('Ignoring channel join message')
-            return
-        elif subtype == 'channel_leave':
-            logger.debug('Ignoring channel join message')
-            return
+        if msg_type.startswith('channel'):
+            msg_type = 'channel'
 
-        if 'type' not in msg:
+        if msg_type == 'hello':
+            logger.debug('login data ok')
+        elif ok:
+            logger.debug('API response: %s', msg)
+        elif not ok:
+            logger.debug('API error: %s, %s', msg.get('error'), msg)
+        elif msg_type is None:
             logging.debug('Ignoring non event message %s' % msg)
             return
-
-        if msg['type'].startswith('channel'):
-            event_type = 'channel'
         else:
-            event_type = msg['type']
+            logger.debug('Event Received: %s', msg)
 
-        event_handler = self.event_handlers.get(event_type)
+        event_handler = self.event_handlers.get(msg_type)
 
         if event_handler is None:
             logger.debug('No event handler for this type %s, '
-                         'ignoring ...' % event_type)
+                         'ignoring ...' % msg_type)
             return
         try:
             await event_handler(msg)
@@ -140,8 +143,15 @@ class SirBot:
         :return:
         """
         logger.debug('Message handler received %s' % msg)
-
+        ignoring = ['message_changed', 'message_deleted', 'channel_join',
+                    'channel_leave']
         channel = msg.get('channel', None)
+
+        if msg.get('subtype') in ignoring:
+            logger.debug('Ignoring %s subtype', msg.get('subtype'))
+            return
+        else:
+            logger.debug('Message Received: %s', msg)
 
         if channel[0] not in 'CGD':
             logger.debug('Unknown channel, Unable to handle this channel: %s',
@@ -307,11 +317,14 @@ class SirBot:
         ChannelManager up to date afterwards by processing incoming channel
         event.
         """
-        bot_channels, all_channels = await self._http_client.get_channels()
-        self.channels.add(*bot_channels)
-        self.all_channels.add(*all_channels)
-        logger.info('Bot in channels: %s', self.channels.channels.keys())
-        logger.info('All channels: %s', self.all_channels.channels.keys())
+        try:
+            bot_channels, all_channels = await self._http_client.get_channels()
+            self.channels.add(*bot_channels)
+            self.all_channels.add(*all_channels)
+            logger.info('Bot in channels: %s', self.channels.channels.keys())
+            logger.info('All channels: %s', self.all_channels.channels.keys())
+        except asyncio.CancelledError:
+            pass
 
     def run(self, host: str = '0.0.0.0', port: int = 8080):
         web.run_app(self._app, host=host, port=port)

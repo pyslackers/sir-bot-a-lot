@@ -12,4 +12,3 @@ PyYAML>=3.11
 Sphinx>=1.4.5
 tox>=2.3.1
 watchdog>=0.8.3
-websockets>=3.2
