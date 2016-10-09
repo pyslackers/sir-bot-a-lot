@@ -7,6 +7,7 @@ import aiohttp
 import websockets
 
 from .base import Channel
+from .queue import IterableQueue
 
 logger = logging.getLogger('sirbot')
 
@@ -44,6 +45,10 @@ class HTTPClient:
         self.token = token
         self.session = aiohttp.ClientSession()
         self.loop = loop or asyncio.get_event_loop()
+
+    def __del__(self):
+        if not self.session.closed:
+            self.session.close()
 
     async def delete(self, message):
         """
@@ -222,13 +227,14 @@ class RTMClient:
         self.api_root = 'https://slack.com/api/{0}'
         self.message_id = 0
         self.token = token
-        self.queue = asyncio.Queue()
+        self.queue = IterableQueue()
         self.session = aiohttp.ClientSession()
         self._login_data = None
         self._closed = asyncio.Event(loop=self.loop)
 
     def __del__(self):
-        self.session.close()
+        if not self.session.closed:
+            self.session.close()
 
     @property
     def is_closed(self):
