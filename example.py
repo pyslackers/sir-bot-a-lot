@@ -31,7 +31,7 @@ async def get_quote_of_the_day():
 
 
 @bot.listen('(([Cc]an|[Mm]ay) I have the )?quote of the day\?$')
-async def quote_of_the_day(message, *args, **kwargs):
+async def quote_of_the_day(message, *args, chat=None, **kwargs):
     """
     Quote of the day example.
 
@@ -47,11 +47,11 @@ async def quote_of_the_day(message, *args, **kwargs):
                             color='good',
                             thumb_url=image)
     message.attachments.append(attachment)
-    await bot.send(message)
+    await chat.send(message)
 
 
 @bot.listen('test message')
-async def test_message(message, *args, **kwargs):
+async def test_message(message, *args, chat=None, **kwargs):
     """
     Test message
 
@@ -85,18 +85,18 @@ async def test_message(message, *args, **kwargs):
     att.actions += b1, b2, b3
 
     message.attachments.append(att)
-    await bot.send(message)
+    await chat.send(message)
 
 
 @bot.listen('sirbot')
-async def react(message, *args, **kwargs):
+async def react(message, *args, chat=None, **kwargs):
     """
     Test reaction
 
     React to any message containing 'sirbot' with a robot face reaction
     """
     reaction = 'robot_face'
-    await bot.add_reaction([message.incoming, reaction])
+    await chat.add_reaction([message.incoming, reaction])
 
 
 if __name__ == '__main__':

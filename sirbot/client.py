@@ -1,56 +1,103 @@
 import asyncio
 import json
 import logging
-from urllib.parse import urlencode
+from typing import Any, AnyStr, Dict, Optional
 
 import aiohttp
 
-from .base import Channel
-from .queue import IterableQueue
+from .base import Channel, Message, User
+from .errors import (
+    SlackConnectionError,
+    SlackServerError,
+    SlackRedirectionError,
+    SlackAPIError
+)
 
 logger = logging.getLogger('sirbot')
 
 
-class SlackClientError(Exception):
-    """Generic slack client error"""
+class _APIPath:
+    """Path definitions for slack"""
+    SLACK_API_ROOT = 'https://slack.com/api/{0}'
+
+    ADD_REACT = SLACK_API_ROOT.format('reactions.add')
+    DELETE_MSG = SLACK_API_ROOT.format('chat.delete')
+    DELETE_REACT = SLACK_API_ROOT.format('reactions.remove')
+    GET_CHANNEL = SLACK_API_ROOT.format('channels.list')
+    GET_CHANNEL_INFO = SLACK_API_ROOT.format('channels.info')
+    GET_REACT = SLACK_API_ROOT.format('reactions.get')
+    POST_MSG = SLACK_API_ROOT.format('chat.postMessage')
+    RTM_START = SLACK_API_ROOT.format('rtm.start')
+    UPDATE_MSG = SLACK_API_ROOT.format('chat.update')
 
 
-class SlackConnectionError(SlackClientError):
-    """Connection to slack server error"""
+class _APICaller:
+    """
+    Helper class for anything that can call the slack API.
 
+    :param token: Slack API Token
+    :param loop: Asyncio event loop to run in.
+    """
+    __slots__ = ('_token', '_loop', '_session')
 
-class SlackServerError(SlackClientError):
-    """Internal slack server error"""
-
-
-class SlackRedirectionError(SlackClientError):
-    """Redirection status code"""
-
-
-class SlackAPIError(SlackClientError):
-    """Wrong use of slack API"""
-
-
-class HTTPClient:
-    def __init__(self, token, *, loop=None):
-        self.api_root = 'https://slack.com/api/{0}'
-        self.api_post_msg = self.api_root.format('chat.postMessage')
-        self.api_update_msg = self.api_root.format('chat.update')
-        self.api_delete_msg = self.api_root.format('chat.delete')
-        self.api_add_react = self.api_root.format('reactions.add')
-        self.api_delete_react = self.api_root.format('reactions.remove')
-        self.api_get_react = self.api_root.format('reactions.get')
-        self.api_get_channel = self.api_root.format('channels.list')
-        self.api_get_channel_info = self.api_root.format('channels.info')
-        self.token = token
-        self.session = aiohttp.ClientSession()
-        self.loop = loop or asyncio.get_event_loop()
+    def __init__(self, token: str, *,
+                 loop: Optional[asyncio.BaseEventLoop]=None):
+        self._token = token
+        self._loop = loop or asyncio.get_event_loop()
+        self._session = aiohttp.ClientSession(loop=self._loop)
 
     def __del__(self):
-        if not self.session.closed:
-            self.session.close()
+        if not self._session.closed:
+            self._session.close()
 
-    async def delete(self, message):
+    async def _do_post(self, url: str, *,
+                       msg: Optional[Dict[AnyStr, Any]]=None,
+                       token: Optional[AnyStr]=None):
+        """
+        Perform a POST request, validating the response code.
+        This will throw a SlackAPIError, or decendent, on non-200
+        status codes
+
+        :param url: url for the request
+        :param msg: payload to send
+        :param token: optionally override the set token.
+        :type msg: dict
+        :return: Slack API Response
+        :rtype: dict
+        """
+        msg = msg or {}
+        msg['token'] = token or self._token
+        async with self._session.post(url, data=msg) as response:
+            if 200 <= response.status < 300:
+                rep = await response.json()
+                if rep['ok'] is True:
+                    logger.debug('Message API response: %s', rep)
+                    return rep
+                else:
+                    logger.warning('Message API response: %s', rep)
+                    raise SlackAPIError(rep)
+            elif 300 <= response.status < 400:
+                e = 'Redirection, status code: {}'.format(response.status)
+                logger.error(e)
+                raise SlackRedirectionError(e)
+            elif 400 <= response.status < 500:
+                e = 'Client error, status code: {}'.format(response.status)
+                logger.error(e)
+                raise SlackConnectionError(e)
+            elif 500 <= response.status < 600:
+                e = 'Server error, status code: {}'.format(response.status)
+                raise SlackServerError(e)
+
+
+class HTTPClient(_APICaller):
+    """
+    Client for the slack HTTP API.
+
+    :param token: Slack API access token
+    :param loop: Event loop, optional
+    """
+
+    async def delete(self, message: Message):
         """
         Delete a previously sent message
 
@@ -58,12 +105,12 @@ class HTTPClient:
         :type message: Message
         :return: Timestamp of the message
         """
-        logger.debug('Message Delete: {}'.format(message))
+        logger.debug('Message Delete: %s', message)
         msg = self._prepare_message(message)
-        rep = await self._query_api(msg, self.api_delete_msg)
+        rep = await self._do_post(_APIPath.DELETE_MSG, msg=msg)
         return rep.get('ts')
 
-    async def send(self, message):
+    async def send(self, message: Message):
         """
         Send a new message
 
@@ -71,13 +118,12 @@ class HTTPClient:
         :type message: Message
         :return: Timestamp of the message
         """
-        logger.debug('Message Sent: {}'.format(message))
-        url = self.api_post_msg
+        logger.debug('Message Sent: %s', message)
         msg = self._prepare_message(message)
-        rep = await self._query_api(msg, url)
+        rep = await self._do_post(_APIPath.POST_MSG, msg=msg)
         return rep.get('ts')
 
-    async def update(self, message, timestamp=None):
+    async def update(self, message: Message, timestamp: str=None):
         """
         Update a previously sent message
 
@@ -89,13 +135,12 @@ class HTTPClient:
         :param timestamp: Timestamp of the message to update
         :return: Timestamp of the message
         """
-        logger.debug('Message Update: {}'.format(message))
-        url = self.api_update_msg
+        logger.debug('Message Update: %s', message)
         msg = self._prepare_message(message, timestamp)
-        rep = await self._query_api(msg, url)
+        rep = await self._do_post(_APIPath.UPDATE_MSG, msg=msg)
         return rep.get('ts')
 
-    def _prepare_message(self, message, timestamp=None):
+    def _prepare_message(self, message: Message, timestamp: str=None):
         """
         Format the message for the Slack API
 
@@ -105,44 +150,12 @@ class HTTPClient:
         :rtype: dict
         """
         msg = message.serialize()
-        msg['token'] = self.token
         if timestamp:
             msg['ts'] = timestamp
 
         return msg
 
-    async def _query_api(self, msg, url):
-        """
-        Query the Slack API and check the response for error.
-
-        :param msg: payload to send
-        :param url: url for the request
-        :type msg: dict
-        :return: Slack API Response
-        :rtype: dict
-        """
-        async with self.session.post(url, data=msg) as response:
-            if 200 <= response.status < 300:
-                rep = await response.json()
-                if rep['ok'] is True:
-                    logger.debug('Message API response: {}'.format(rep))
-                    return rep
-                else:
-                    logger.warning('Message API response: {}'.format(rep))
-                    raise SlackAPIError(rep)
-            elif 300 <= response.status < 400:
-                e = 'Redirection, status code: {}'.format(response.status)
-                logging.error(e)
-                raise SlackRedirectionError(e)
-            elif 400 <= response.status < 500:
-                e = 'Client error, status code: {}'.format(response.status)
-                logging.error(e)
-                raise SlackConnectionError(e)
-            elif 500 <= response.status < 600:
-                e = 'Server error, status code: {}'.format(response.status)
-                raise SlackServerError(e)
-
-    async def add_reaction(self, message, reaction='thumbsup'):
+    async def add_reaction(self, message: Message, reaction: str='thumbsup'):
         """
         Add a reaction to a message
 
@@ -152,10 +165,10 @@ class HTTPClient:
         :param reaction: Reaction to add
         """
         msg = self._prepare_reaction(message, reaction)
-        logger.debug('Reaction Add: {}'.format(msg))
-        await self._query_api(msg, self.api_add_react)
+        logger.debug('Reaction Add: %s', msg)
+        await self._do_post(_APIPath.ADD_REACT, msg=msg)
 
-    async def delete_reaction(self, message, reaction):
+    async def delete_reaction(self, message: Message, reaction: str):
         """
         Delete a reaction from a message
 
@@ -163,10 +176,10 @@ class HTTPClient:
         :param reaction: Reaction to delete
         """
         msg = self._prepare_reaction(message, reaction)
-        logger.debug('Reaction Delete: {}'.format(msg))
-        await self._query_api(msg, self.api_delete_react)
+        logger.debug('Reaction Delete: %s', msg)
+        await self._do_post(_APIPath.DELETE_REACT, msg=msg)
 
-    async def get_reaction(self, message):
+    async def get_reaction(self, message: Message):
         """
         Query all the reactions of a message
 
@@ -178,10 +191,10 @@ class HTTPClient:
         msg = self._prepare_reaction(message)
         msg['full'] = True  # Get all the message information
         logger.debug('Reaction Get: {}'.format(msg))
-        rep = await self._query_api(msg, self.api_get_react)
+        rep = await self._do_post(_APIPath.GET_REACT, msg=msg)
         return rep.get('message').get('reactions')
 
-    def _prepare_reaction(self, message, reaction=''):
+    def _prepare_reaction(self, message: Message, reaction: str=''):
         """
         Format the message and reaction for the Slack API
 
@@ -191,7 +204,6 @@ class HTTPClient:
         :rtype: dict
         """
         msg = message.serialize()
-        msg['token'] = self.token
         msg['name'] = reaction
         msg['timestamp'] = msg['ts']
         return msg
@@ -205,12 +217,11 @@ class HTTPClient:
         bot is present. Second one contain all the available channels of the
         team.
         """
-        logging.debug('Getting channels')
+        logger.debug('Getting channels')
         all_channels = []
         bot_channels = []
 
-        msg = {'token': self.token}
-        rep = await self._query_api(msg, self.api_get_channel)
+        rep = await self._do_post(_APIPath.GET_CHANNEL, msg={})
         for chan in rep.get('channels'):
             channel = Channel(channel_id=chan['id'], **chan)
             all_channels.append(channel)
@@ -219,7 +230,7 @@ class HTTPClient:
 
         return bot_channels, all_channels
 
-    async def get_channels_info(self, channel_id):
+    async def get_channels_info(self, channel_id: str):
         """
         Query the information about a channel
 
@@ -228,92 +239,182 @@ class HTTPClient:
         :rtype: dict
         """
         msg = {
-            'token': self.token,
             'channel': channel_id
         }
 
-        rep = await self._query_api(msg, self.api_get_channel_info)
+        rep = await self._do_post(_APIPath.GET_CHANNEL_INFO, msg=msg)
         return rep['channel']
 
 
-class RTMClient:
-    def __init__(self, token, *, loop=None):
-        self.ws = None
-        self.loop = loop or asyncio.get_event_loop()
-        self.api_root = 'https://slack.com/api/{0}'
-        self.message_id = 0
-        self.token = token
-        self.queue = IterableQueue()
-        self.session = aiohttp.ClientSession()
-        self._login_data = None
-        self._closed = asyncio.Event(loop=self.loop)
+class RTMClient(_APICaller):
+    """
+    Client for the slack RTM API (websocket based API).
 
-    def __del__(self):
-        if not self.session.closed:
-            self.session.close()
+    :param token: Slack API Token
+    :param loop: Event loop to work in, optional.
+    """
+    def __init__(self, token: str, *,
+                 loop: Optional[asyncio.BaseEventLoop]=None):
+        super().__init__(token, loop=loop)
+
+        self._ws = None
+        self._session = aiohttp.ClientSession()
+        self._login_data = None
+        self._closed = asyncio.Event(loop=self._loop)
+        self._closed.set()
 
     @property
-    def is_closed(self):
+    def slack_id(self):
+        if self._login_data is None:
+            return None
+        return self._login_data['self']['id']
+
+    @property
+    def is_closed(self) -> bool:
         """bool: Indicates if the websocket connection is closed."""
         return self._closed.is_set()
 
-    async def api_call(self, method='?', post_data=None):
-        post_data = post_data or {}
-        post_data['token'] = self.token
-        post_data = urlencode(post_data).encode()
+    async def _negotiate_rtm_url(self):
+        """
+        Get the RTM url
+        """
+        self._login_data = await self._do_post(_APIPath.RTM_START)
 
-        url = self.make_api_url(method)
-        headers = {
-            'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
-        }
+        if self._login_data.get('ok') is False:
+            raise SlackConnectionError(
+                'Error with slack {}'.format(self._login_data))
 
-        async with self.session.post(url, data=post_data,
-                                     headers=headers) as resp:
-            if resp.status != 200:
-                logger.error('Unable to post to slack: %s', await resp.text())
-                raise SlackConnectionError('Slack connection error')
-            return await resp.json()
+        # TODO: We will want to make sure to add in re-connection
+        #       functionality if there is an error.
+        return self._login_data['url']
 
-    def make_api_url(self, method):
-        return self.api_root.format(method)
-
-    async def rtm_connect(self, reconnect=False):
+    async def connect(self, queue: asyncio.Queue):
+        """
+        Connect to the websocket stream and iterate over the messages
+        dumping them in the Queue.
+        """
+        ws_url = await self._negotiate_rtm_url()
         try:
-            method = 'rtm.start'
-            self._login_data = await self.api_call(method)
-
-            if self._login_data.get('ok') is False:
-                raise SlackConnectionError(
-                    'Error with slack {}'.format(self._login_data))
-
-            ws_url = self._login_data['url']
-            async with self.session.ws_connect(ws_url) as ws:
+            # TODO: We will need to put in some logic for re-connection
+            #       on error.
+            async with self._session.ws_connect(ws_url) as ws:
+                self._closed.clear()
+                self._ws = ws
                 async for msg in ws:
                     if msg.type == aiohttp.WSMsgType.TEXT:
-                        msg = json.loads(msg.data)
-                        await self.queue.put(msg)
+                        await queue.put(json.loads(msg.data))
                     elif msg.type == aiohttp.WSMsgType.CLOSED:
+                        logger.info('Slack websocket closed by remote.')
                         break  # noqa
                     elif msg.type == aiohttp.WSMsgType.ERROR:
+                        logger.error('Websocket closed with error: %s.',
+                                     ws.exception())
                         break  # noqa
         except asyncio.CancelledError:
             pass
-
-    async def send_message(self, message, method='send', *args, **kwargs):
-        if method == 'update':
-            logger.warning('RTMClient does not support message update')
-        data = {
-            'type': 'message',
-            'channel': message.to.id,
-            'text': message.text
-        }
-        logger.debug('Message Sent: {}'.format(message))
-        await self.ws.send(json.dumps(data))
-
-    def run(self):
-        try:
-            self.loop.run_until_complete(self.rtm_connect())
-        except KeyboardInterrupt:
-            pass
         finally:
-            self.loop.close()
+            self._closed.set()
+            self._ws = None
+
+    # Currently unused, only commenting out for the short term while
+    # we work on some milestones for testing and cleanup
+    # async def send_message(self, message, method='send', *args, **kwargs):
+    #     if method == 'update':
+    #         raise ValueError('RTMClient does not support message update.')
+
+    #     data = {
+    #         'type': 'message',
+    #         'channel': message.to.id,
+    #         'text': message.text
+    #     }
+    #     logger.debug('Message Sent: {}'.format(message))
+    #     await self._ws.send(json.dumps(data))
+
+
+class ClientFacade:
+    """
+    A class to compose all available functionality available to a bot
+    or other plugin. This determines the appropriate channel to communicate
+    with slack over (RTM or HTTP)
+    """
+    __slots__ = ('_http_client',)
+
+    def __init__(self, http_client):
+        self._http_client = http_client
+
+    async def send(self, *messages):
+        """
+        Send the messages provided and update their timestamp
+
+        :param messages: Messages to send
+        """
+        for message in messages:
+            message.timestamp = await self._http_client.send(
+                message=message)
+
+    async def update(self, *messages):
+        """
+        Update the messages provided and update their timestamp
+
+        :param messages: Messages to update
+        """
+        for message in messages:
+            message.timestamp = await self._http_client.update(
+                message=message)
+
+    async def delete(self, *messages):
+        """
+        Delete the messages provided
+
+        :param messages: Messages to delete
+        """
+        for message in messages:
+            message.timestamp = await self._http_client.delete(message)
+
+    async def add_reaction(self, *messages):
+        """
+        Add a reaction to a message
+
+        :Example:
+
+        >>> bot.add_reaction([Message, 'thumbsup'], [Message, 'robotface'])
+        Add the thumbup and robotface reaction to the message
+
+        :param messages: List of message and reaction to add
+        """
+        for message, reaction in messages:
+            await self._http_client.add_reaction(message, reaction)
+
+    async def delete_reaction(self, *messages):
+        """
+        Delete reactions from messages
+
+        :Example:
+
+        >>> bot.delete_reaction([Message, 'thumbsup'], [Message, 'robotface'])
+        Delete the thumbup and robotface reaction from the message
+
+        :param messages: List of message and reaction to delete
+        """
+        for message, reaction in messages:
+            await self._http_client.delete_reaction(message, reaction)
+
+    async def get_reactions(self, *messages):
+        """
+        Query the reactions of messages
+
+        :param messages: Messages to query reaction from
+        :return: dictionary of reactions by message
+        :rtype: dict
+        """
+        reactions = dict()
+        for message in messages:
+            msg_reactions = await self._http_client.get_reaction(message)
+            for msg_reaction in msg_reactions:
+                users = list()
+                for user_id in msg_reaction.get('users'):
+                    users.append(User(user_id=user_id))
+                msg_reaction['users'] = users
+            reactions[message] = msg_reactions
+            message.reactions = msg_reactions
+        return reactions
