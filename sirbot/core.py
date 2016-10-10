@@ -1,22 +1,32 @@
-import logging
-import re
 import asyncio
 import functools
+import logging
+import re
+from typing import Optional
 
 from aiohttp import web
 
 from sirbot.base import Message, User, Channel
-from .client import RTMClient, HTTPClient
-from .channel import ChannelManager
+from sirbot.client import RTMClient, HTTPClient, ClientFacade
+from sirbot.channel import ChannelManager
+from sirbot.queue import IterableQueue
 
 logger = logging.getLogger('sirbot')
 
 
 class SirBot:
-    def __init__(self, token, *, loop: asyncio.AbstractEventLoop = None):
+    def __init__(self, token, *,
+                 loop: Optional[asyncio.AbstractEventLoop] = None):
         self.loop = loop or asyncio.get_event_loop()
-        self._rtm_client = RTMClient(token)
-        self._http_client = HTTPClient(token)
+
+        # Named tasks, anything the bot is directly responsible for
+        # maintaing the lifecycle of.
+        self._tasks = {}
+
+        self._rtm_client = RTMClient(token, loop=self.loop)
+        self._rtm_queue = IterableQueue()
+        self._http_client = HTTPClient(token, loop=self.loop)
+
         self.channels = ChannelManager(client=self._http_client)
         self.all_channels = ChannelManager(client=self._http_client)
         self.commands = {
@@ -29,66 +39,47 @@ class SirBot:
         self.mentioned_regex = re.compile(
             r'^(?:\<@(?P<atuser>\w+)\>:?|(?P<username>\w+)) ?(?P<text>.*)$')
 
-        self._app = web.Application(loop=loop)
+        self._app = web.Application(loop=self.loop)
         self._app.on_startup.append(self._start_background_tasks)
         self._app.on_cleanup.append(self._clean_background_tasks)
 
-    async def _start_background_tasks(self, app):
-        app['rtm_connect'] = app.loop.create_task(
-            self._rtm_client.rtm_connect())
-        app['rtm_read'] = app.loop.create_task(self.rtm_read())
-        app['get_channels'] = app.loop.create_task(self._get_channels())
+    async def _start_background_tasks(self, app: web.Application):
+        """
+        Start the background tasks
+        :param app: aiohttp application instance.
+        """
+        self._tasks.update(
+            rtm_connect=app.loop.create_task(
+                self._rtm_client.connect(self._rtm_queue)),
+            rtm_read=app.loop.create_task(self._rtm_read()),
+            get_channels=app.loop.create_task(self._get_channels()),
+        )
+
+        # Ensure that if futures exit on error, they aren't silently ignored.
+        def print_if_err(f):
+            """Logs the error if one occurred causing the task to exit."""
+            if f.exception() is not None:
+                logger.error('Task exited with error: %s', f.exception())
+
+        for task in self._tasks.values():
+            task.add_done_callback(print_if_err)
 
     async def _clean_background_tasks(self, app):
-        app['rtm_connect'].cancel()
-        app['rtm_read'].cancel()
-        app['get_channels'].cancel()
-        await app['rtm_connect']
-        await app['rtm_read']
-        await app['get_channels']
-
-    @property
-    def bot_id(self):
-        return self._rtm_client._login_data['self']['id']
-
-    @property
-    def app(self):
-        """Return the composed aiohttp application"""
-        return self._app
-
-    def listen(self, matchstr, flags=0, func=None):
         """
-        DEPRECATED
-
-        Decorator to register a plugin method. The plugin method will be called
-        with a Message object and the message can be replied to with methods on
-        the SirBot instance.
-
-        This has been deprecated in favor of an upcoming plugin API (where the
-        server will discover and use installed/available plugins).
-
-        :param matchstr: The string (regex) to match in messages
-        :param flags: Regex flags to use
-        :param func: Function to call, note: this will be auto-resolved.
-        :return: Original function, unmodified.
+        Clean up the background tasks
+        :param app: aiohttp application instance.
         """
-        if func is None:
-            logger.debug('No function provided, providing a partial.')
-            return functools.partial(self.listen, matchstr, flags)
-        wrapped = func
+        for task in self._tasks.values():
+            task.cancel()
+        await asyncio.gather(*self._tasks.values(), loop=self.loop)
 
-        if not asyncio.iscoroutinefunction(wrapped):
-            logger.debug('Function is not a coroutine, converting.')
-            wrapped = asyncio.coroutine(wrapped)
-        logger.debug('Registering listener for "%s"', matchstr)
-        self.commands['listen'][re.compile(matchstr, flags)] = wrapped
-
-        # Return original func
-        return func
-
-    async def rtm_read(self):
+    async def _rtm_read(self):
+        """
+        Read the from the message queue, most likely full of data
+        from the Real Time Slack API.
+        """
         try:
-            rtm_q = self._rtm_client.queue
+            rtm_q = self._rtm_queue
             async for message in rtm_q:
                 await self._dispatch_message(message)
                 rtm_q.task_done()
@@ -101,7 +92,7 @@ class SirBot:
 
         :param msg: incoming message
         """
-        logger.debug('Dispatcher received message %s' % msg)
+        logger.debug('Dispatcher received message %s', msg)
         msg_type = msg.get('type', None)
         ok = msg.get('ok', None)
 
@@ -115,7 +106,7 @@ class SirBot:
         elif not ok:
             logger.debug('API error: %s, %s', msg.get('error'), msg)
         elif msg_type is None:
-            logging.debug('Ignoring non event message %s' % msg)
+            logging.debug('Ignoring non event message %s', msg)
             return
         else:
             logger.debug('Event Received: %s', msg)
@@ -124,13 +115,13 @@ class SirBot:
 
         if event_handler is None:
             logger.debug('No event handler for this type %s, '
-                         'ignoring ...' % msg_type)
+                         'ignoring ...', msg_type)
             return
         try:
             await event_handler(msg)
         except Exception:
-            logger.exception('There was an issue with event handler %s'
-                             % event_handler)
+            logger.exception('There was an issue with event handler %s',
+                             event_handler)
 
     async def _message_handler(self, msg):
         """
@@ -142,7 +133,7 @@ class SirBot:
         :param msg: incoming message
         :return:
         """
-        logger.debug('Message handler received %s' % msg)
+        logger.debug('Message handler received %s', msg)
         ignoring = ['message_changed', 'message_deleted', 'channel_join',
                     'channel_leave']
         channel = msg.get('channel', None)
@@ -219,7 +210,7 @@ class SirBot:
             channel.name = msg['channel']['name']
         else:
             logger.debug('No channel event handler for this type %s, '
-                         'ignoring ...' % msg_type)
+                         'ignoring ...', msg_type)
 
     async def _plugin_dispatcher(self, msg):
         """
@@ -230,84 +221,8 @@ class SirBot:
             if n:
                 logger.debug('Located handler for text, invoking')
                 rep = Message(to=msg.to, frm=msg.frm, incoming=msg)
-                await func(rep, n.groups())
-
-    async def send(self, *messages):
-        """
-        Send the messages provided and update their timestamp
-
-        :param messages: Messages to send
-        """
-        for message in messages:
-            message.timestamp = await self._http_client.send(
-                message=message)
-
-    async def update(self, *messages):
-        """
-        Update the messages provided and update their timestamp
-
-        :param messages: Messages to update
-        """
-        for message in messages:
-            message.timestamp = await self._http_client.update(
-                message=message)
-
-    async def delete(self, *messages):
-        """
-        Delete the messages provided
-
-        :param messages: Messages to delete
-        """
-        for message in messages:
-            message.timestamp = await self._http_client.delete(message)
-
-    async def add_reaction(self, *messages):
-        """
-        Add a reaction to a message
-
-        :Example:
-
-        >>> bot.add_reaction([Message, 'thumbsup'], [Message, 'robotface'])
-        Add the thumbup and robotface reaction to the message
-
-        :param messages: List of message and reaction to add
-        """
-        for message, reaction in messages:
-            await self._http_client.add_reaction(message, reaction)
-
-    async def delete_reaction(self, *messages):
-        """
-        Delete reactions from messages
-
-        :Example:
-
-        >>> bot.delete_reaction([Message, 'thumbsup'], [Message, 'robotface'])
-        Delete the thumbup and robotface reaction from the message
-
-        :param messages: List of message and reaction to delete
-        """
-        for message, reaction in messages:
-            await self._http_client.delete_reaction(message, reaction)
-
-    async def get_reactions(self, *messages):
-        """
-        Query the reactions of messages
-
-        :param messages: Messages to query reaction from
-        :return: dictionary of reactions by message
-        :rtype: dict
-        """
-        reactions = dict()
-        for message in messages:
-            msg_reactions = await self._http_client.get_reaction(message)
-            for msg_reaction in msg_reactions:
-                users = list()
-                for user_id in msg_reaction.get('users'):
-                    users.append(User(user_id=user_id))
-                msg_reaction['users'] = users
-            reactions[message] = msg_reactions
-            message.reactions = msg_reactions
-        return reactions
+                await func(rep, n.groups(),
+                           chat=ClientFacade(self._http_client))
 
     async def _get_channels(self):
         """
@@ -326,5 +241,44 @@ class SirBot:
         except asyncio.CancelledError:
             pass
 
-    def run(self, host: str = '0.0.0.0', port: int = 8080):
+    @property
+    def bot_id(self):
+        return self._rtm_client.slack_id
+
+    @property
+    def app(self):
+        """Return the composed aiohttp application"""
+        return self._app
+
+    def listen(self, matchstr, flags=0, func=None):
+        """
+        DEPRECATED
+
+        Decorator to register a plugin method. The plugin method will be called
+        with a Message object and the message can be replied to with methods on
+        the SirBot instance.
+
+        This has been deprecated in favor of an upcoming plugin API (where the
+        server will discover and use installed/available plugins).
+
+        :param matchstr: The string (regex) to match in messages
+        :param flags: Regex flags to use
+        :param func: Function to call, note: this will be auto-resolved.
+        :return: Original function, unmodified.
+        """
+        if func is None:
+            logger.debug('No function provided, providing a partial.')
+            return functools.partial(self.listen, matchstr, flags)
+        wrapped = func
+
+        if not asyncio.iscoroutinefunction(wrapped):
+            logger.debug('Function is not a coroutine, converting.')
+            wrapped = asyncio.coroutine(wrapped)
+        logger.debug('Registering listener for "%s"', matchstr)
+        self.commands['listen'][re.compile(matchstr, flags)] = wrapped
+
+        # Return original func
+        return func
+
+    def run(self, host: str='0.0.0.0', port: int=8080):
         web.run_app(self._app, host=host, port=port)
