@@ -12,6 +12,7 @@ lint:
 
 test:
   stage: test
+  coverage: dist/cov.xml
   script:
   - python setup.py test
 
