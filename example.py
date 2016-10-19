@@ -29,37 +29,6 @@ async def get_quote_of_the_day():
 
     return quote, author, image
 
-# Programming quote
-async def get_programming_quote():
-    url = 'http://quotes.stormconsultancy.co.uk/random.json'
-    quote_r = {}
-    async with aiohttp.get(url) as response:
-        if response.status != 200:
-            raise Exception('Error talking to quote api')
-        quote_r = await response.json()
-
-    quote = quote_r['quote']
-    author = quote_r['author']
-
-    return quote, author
-
-@bot.listen('(([Cc]an|[Mm]ay) I have a )?programming quote\?$')
-async def programming_quote(message, *args, chat=None, **kwargs):
-    """
-    Programming quote
-
-    Query quotes.stormconsultancy.co.uk API and create of message
-    """
-    quote, author = await get_programming_quote()
-    google_url = 'http://www.google.com/search?q={}'
-    attachment = Attachment(fallback='Programming quote',
-                            text='_{}_'.format(quote),
-                            author_name=author,
-                            author_link=google_url.format(author),
-                            footer='quotes.stormconsultancy.co.uk',
-                            color='good')
-    message.attachments.append(attachment)
-    await chat.send(message)
 
 @bot.listen('(([Cc]an|[Mm]ay) I have the )?quote of the day\?$')
 async def quote_of_the_day(message, *args, chat=None, **kwargs):
