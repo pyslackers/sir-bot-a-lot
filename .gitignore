@@ -121,3 +121,4 @@ Temporary Items
 Thumbs.db
 var/
 venv/
+/.state/

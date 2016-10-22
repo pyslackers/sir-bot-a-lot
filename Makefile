@@ -1,5 +1,7 @@
 .PHONY: clean clean-test clean-pyc clean-build docs help
 .DEFAULT_GOAL := help
+BINDIR = $(PWD)/.state/env/bin
+
 define BROWSER_PYSCRIPT
 import os, webbrowser, sys
 try:
@@ -86,3 +88,18 @@ dist: clean ## builds source and wheel package
 
 install: clean ## install the package to the active Python's site-packages
 	python setup.py install
+
+build:
+	docker-compose build
+
+	# Mark this state so that the other target will known it's recently been
+	# rebuilt.
+	mkdir -p .state
+	touch .state/docker-build
+
+serve: .state/docker-build
+	docker-compose up
+
+purge:
+	rm -rf .state
+	docker-compose rm --force
