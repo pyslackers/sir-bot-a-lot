@@ -5,9 +5,11 @@ import re
 from typing import Optional
 
 from aiohttp import web
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+from sirbot.facade import BotFacade
 from sirbot.base import Message, User, Channel
-from sirbot.client import RTMClient, HTTPClient, ClientFacade
+from sirbot.client import RTMClient, HTTPClient
 from sirbot.channel import ChannelManager
 from sirbot.queue import IterableQueue
 
@@ -26,6 +28,8 @@ class SirBot:
         self._rtm_client = RTMClient(token, loop=self.loop)
         self._rtm_queue = IterableQueue()
         self._http_client = HTTPClient(token, loop=self.loop)
+        self._scheduler = AsyncIOScheduler()
+        self._scheduler.start()
 
         self.channels = ChannelManager(client=self._http_client)
         self.all_channels = ChannelManager(client=self._http_client)
@@ -225,7 +229,7 @@ class SirBot:
                 logger.debug('Located handler for text, invoking')
                 rep = Message(to=msg.to, frm=msg.frm, incoming=msg)
                 await func(rep, n.groups(),
-                           chat=ClientFacade(self._http_client))
+                           chat=BotFacade(self._http_client, self._scheduler))
 
     async def _get_channels(self):
         """
