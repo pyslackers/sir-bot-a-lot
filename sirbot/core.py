@@ -100,11 +100,13 @@ class SirBot:
             msg_type = 'channel'
 
         if msg_type == 'hello':
-            logger.debug('login data ok')
+            logger.info('login data ok')
         elif ok:
+            if msg.get('warning'):
+                logger.info('API response: %s, %S', msg.get('warning'), msg)
             logger.debug('API response: %s', msg)
-        elif not ok:
-            logger.debug('API error: %s, %s', msg.get('error'), msg)
+        elif ok is False:
+            logger.info('API error: %s, %s', msg.get('error'), msg)
         elif msg_type is None:
             logging.debug('Ignoring non event message %s', msg)
             return
