@@ -37,17 +37,26 @@ async def quote_of_the_day(message, *args, chat=None, **kwargs):
 
     Query theysaidso.com API and create of message with an Attachment
     """
-    quote, author, image = await get_quote_of_the_day()
-    google_url = 'http://www.google.com/search?q={}'
-    attachment = Attachment(fallback='The quote of the day',
-                            text='_{}_'.format(quote),
-                            author_name=author,
-                            author_link=google_url.format(author),
-                            footer='theysaidso.com',
-                            color='good',
-                            thumb_url=image)
-    message.attachments.append(attachment)
+    message.text = 'Looking for it...'
     await chat.send(message)
+
+    try:
+        quote, author, image = await get_quote_of_the_day()
+    except Exception:
+        message.text = '''Sorry. I couldn't find it.'''
+    else:
+        message.text = ''
+        google_url = 'http://www.google.com/search?q={}'
+        attachment = Attachment(fallback='The quote of the day',
+                                text='_{}_'.format(quote),
+                                author_name=author,
+                                author_link=google_url.format(author),
+                                footer='theysaidso.com',
+                                color='good',
+                                thumb_url=image)
+        message.attachments.append(attachment)
+    finally:
+        await chat.update(message)
 
 
 @bot.listen('test message')
