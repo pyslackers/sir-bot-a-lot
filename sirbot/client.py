@@ -30,6 +30,8 @@ class _APIPath:
     POST_MSG = SLACK_API_ROOT.format('chat.postMessage')
     RTM_START = SLACK_API_ROOT.format('rtm.start')
     UPDATE_MSG = SLACK_API_ROOT.format('chat.update')
+    GET_USER_INFO = SLACK_API_ROOT.format('users.info')
+    IM_OPEN = SLACK_API_ROOT.format('im.open')
 
 
 class _APICaller:
@@ -245,6 +247,37 @@ class HTTPClient(_APICaller):
 
         rep = await self._do_post(_APIPath.GET_CHANNEL_INFO, msg=msg)
         return rep['channel']
+
+    async def get_user_info(self, user_id: str):
+        """
+        Query the information about an user
+
+        :param user_id: id of the user to query
+        :return: information
+        :rtype: dict
+        """
+        msg = {
+            'user': user_id
+        }
+
+        rep = await self._do_post(_APIPath.GET_USER_INFO, msg=msg)
+        return rep['user']
+
+    async def get_user_dm_channel(self, user_id: str):
+        """
+        Query the id of the direct message channel for an user
+
+        :param user_id: id of the user to query
+        :return: id of the channel
+        :rtype: str
+        """
+
+        msg = {
+            'user': user_id
+        }
+
+        rep = await self._do_post(_APIPath.IM_OPEN, msg=msg)
+        return rep['channel']['id']
 
 
 class RTMClient(_APICaller):

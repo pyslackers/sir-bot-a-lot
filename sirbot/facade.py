@@ -112,7 +112,9 @@ class BotFacade:
 
         :param id_: id of the job
         """
-        if id_ not in []:  # To make sure nobody unschedule core jobs
+
+        # To make sure nobody unschedule core jobs
+        if id_ not in ['UserManager']:
             self._scheduler.remove_job(id_)
 
     def is_scheduled(self, id_):
