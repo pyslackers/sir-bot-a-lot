@@ -164,10 +164,11 @@ class SirBot:
 
         if channel.startswith('D'):
             # If the channel starts with D it is a direct message to the bot
-            message.frm = User(user, msg['channel'])
-            message.to = User(msg['channel'])
+            user = User(user, msg['channel'])
+            message.frm = user
+            message.to = user
         else:
-            message.frm = User(user, msg['channel'])
+            message.frm = User(user)
             message.to = await self.channels.get(msg['channel'])
 
         await self._plugin_dispatcher(message)

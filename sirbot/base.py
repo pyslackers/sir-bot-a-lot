@@ -31,6 +31,10 @@ class User(Receiver):
     def id(self):
         return self._user_id
 
+    @property
+    def channel_id(self):
+        return self._channel_id
+
     def __str__(self):
         return self.id
 
@@ -50,6 +54,10 @@ class Channel(Receiver):
 
     @property
     def id(self):
+        return self._channel_id
+
+    @property
+    def channel_id(self):
         return self._channel_id
 
     @property
@@ -284,6 +292,6 @@ class Message(Serializer):
         if data.get('text') is False and data.get('attachments') is None:
             logger.warning('Message must have text or an attachments')
             raise MessageError('No text or attachments')
-        data['channel'] = self.to.id
+        data['channel'] = self.to.channel_id
         data['ts'] = self.timestamp
         return data
