@@ -7,6 +7,7 @@ from sirbot import SirBot
 from sirbot.message import Attachment, Button, Field
 
 token = os.environ['SIRBOT_TOKEN']
+bot_name = os.environ['BOT_NAME']
 
 bot = SirBot(token=token)
 
@@ -107,6 +108,28 @@ async def react(message, *args, chat=None, **kwargs):
     reaction = 'robot_face'
     await chat.add_reaction([message.incoming, reaction])
 
+
+@bot.listen('{} ping'.format(bot_name))
+async def ping(message, *args, chat=None, **kwargs):
+    """
+    Schedule a ping every 10 seconds
+
+    """
+    if not chat.is_scheduled('ping-{}'.format(message.to.id)):
+        message.text = 'Ping'
+        chat.schedule(chat.send, 'ping-{}'.format(message.to.id), 'interval',
+                      func_args=[message], seconds=10)
+        await chat.send(message)
+
+
+@bot.listen('{} pong'.format(bot_name))
+async def stop_test(message, *args, chat=None, **kwargs):
+    """
+    Unschedule the ping
+
+    """
+    if chat.is_scheduled('ping-{}'.format(message.to.id)):
+        chat.unschedule('ping-{}'.format(message.to.id))
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 8080))
