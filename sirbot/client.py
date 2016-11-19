@@ -4,6 +4,7 @@ import logging
 from typing import Any, AnyStr, Dict, Optional
 
 import aiohttp
+import websockets
 
 from .base import Channel, Message
 from .errors import (
@@ -261,7 +262,6 @@ class RTMClient(_APICaller):
         self._session = aiohttp.ClientSession()
         self._login_data = None
         self._closed = asyncio.Event(loop=self._loop)
-        self._closed.set()
 
     @property
     def slack_id(self):
@@ -293,23 +293,20 @@ class RTMClient(_APICaller):
         Connect to the websocket stream and iterate over the messages
         dumping them in the Queue.
         """
-        ws_url = await self._negotiate_rtm_url()
+
         try:
             # TODO: We will need to put in some logic for re-connection
             #       on error.
-            async with self._session.ws_connect(ws_url) as ws:
-                self._closed.clear()
-                self._ws = ws
-                async for msg in ws:
-                    if msg.type == aiohttp.WSMsgType.TEXT:
-                        await queue.put(json.loads(msg.data))
-                    elif msg.type == aiohttp.WSMsgType.CLOSED:
-                        logger.info('Slack websocket closed by remote.')
-                        break  # noqa
-                    elif msg.type == aiohttp.WSMsgType.ERROR:
-                        logger.error('Websocket closed with error: %s.',
-                                     ws.exception())
-                        break  # noqa
+            ws_url = await self._negotiate_rtm_url()
+            self._ws = await websockets.connect(ws_url)
+
+            while not self.is_closed:
+                msg = await self._ws.recv()
+                if msg is None:
+                    break
+
+                await queue.put(json.loads(msg))
+
         except asyncio.CancelledError:
             pass
         finally:
