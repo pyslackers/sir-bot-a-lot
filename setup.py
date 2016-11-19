@@ -116,4 +116,6 @@ setup(
     name=PKG_META['name'],
     url=PKG_META['url'],
     version=PKG_META['version'],
+    maintainer="pythondev slack community",
+    maintainer_email="ovv@outlook.com"
 )
