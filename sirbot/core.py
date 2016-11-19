@@ -96,7 +96,6 @@ class SirBot:
 
         :param msg: incoming message
         """
-        logger.debug('Dispatcher received message %s', msg)
         msg_type = msg.get('type', None)
         ok = msg.get('ok', None)
 
@@ -114,9 +113,15 @@ class SirBot:
         elif msg_type is None:
             logging.debug('Ignoring non event message %s', msg)
             return
+        elif msg_type == "reconnect_url":
+            # Don't log reconnect_url message
+            return
         else:
             logger.debug('Event Received: %s', msg)
 
+        await self._dispatch_handler(msg, msg_type)
+
+    async def _dispatch_handler(self, msg, msg_type):
         event_handler = self.event_handlers.get(msg_type)
 
         if event_handler is None:
