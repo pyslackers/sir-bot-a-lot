@@ -1,0 +1,11 @@
+loglevel: 10
+core:
+  loglevel: 20
+  plugins:
+    - slack_sirbot
+slack_sirbot:
+  loglevel: 10
+  plugins:
+  - slack_sirbot.channel
+  - slack_sirbot.user
+  - slack_sirbot.example

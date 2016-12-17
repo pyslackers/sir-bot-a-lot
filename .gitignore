@@ -122,3 +122,5 @@ Thumbs.db
 var/
 venv/
 /.state/
+debian/
+.pyvenv/
