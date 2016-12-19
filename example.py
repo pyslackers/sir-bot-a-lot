@@ -7,7 +7,7 @@ from sirbot import SirBot
 from sirbot.message import Attachment, Button, Field
 
 token = os.environ['SIRBOT_TOKEN']
-bot_name = os.environ['BOT_NAME']
+bot_id = "<@{}>".format(os.environ['BOT_ID'])
 
 bot = SirBot(token=token)
 
@@ -109,27 +109,28 @@ async def react(message, *args, chat=None, **kwargs):
     await chat.add_reaction([message.incoming, reaction])
 
 
-@bot.listen('{} ping'.format(bot_name))
+@bot.listen('{} ping me'.format(bot_id))
 async def ping(message, *args, chat=None, **kwargs):
     """
-    Schedule a ping every 10 seconds
+    Schedule a dm pinging the user every 10 seconds
 
     """
-    if not chat.is_scheduled('ping-{}'.format(message.to.id)):
-        message.text = 'Ping'
-        chat.schedule(chat.send, 'ping-{}'.format(message.to.id), 'interval',
+    if not chat.is_scheduled('ping-{}'.format(message.frm.id)):
+        message.text = 'ping'
+        message.to = message.frm
+        chat.schedule(chat.send, 'ping-{}'.format(message.frm.id), 'interval',
                       func_args=[message], seconds=10)
         await chat.send(message)
 
 
-@bot.listen('{} pong'.format(bot_name))
+@bot.listen('{} stop ping'.format(bot_id))
 async def stop_test(message, *args, chat=None, **kwargs):
     """
     Unschedule the ping
 
     """
-    if chat.is_scheduled('ping-{}'.format(message.to.id)):
-        chat.unschedule('ping-{}'.format(message.to.id))
+    if chat.is_scheduled('ping-{}'.format(message.frm.id)):
+        chat.unschedule('ping-{}'.format(message.frm.id))
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 8080))

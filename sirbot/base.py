@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 
 from abc import ABC
 
@@ -13,27 +14,48 @@ class MessageError(Exception):
 class Receiver(ABC):
     """ This is anything that can receive a message ie. a user, channel, etc.
     """
-    pass
+    @property
+    def send_id(self):
+        """
+        Id of the channel to contact the receiver
+        The channel id in case it is a channel or the direct message channel
+        id for an user
+        :return:
+        """
 
 
 class User(Receiver):
     """
     Class representing an user.
     """
-    def __init__(self, user_id=None, channel_id=None):
+    def __init__(self, user_id=None, **kwargs):
         """
         :param user_id: id of the user
         """
         self._user_id = user_id
-        self._channel_id = channel_id
+        self._data = {'dm_channel_id': None}
+        self.add(**kwargs)
+        self.last_seen = time.time()
+
+    def add(self, **kwargs):
+        for item, value in kwargs.items():
+            if item != 'id':
+                self._data[item] = value
 
     @property
     def id(self):
         return self._user_id
 
     @property
-    def channel_id(self):
-        return self._channel_id
+    def send_id(self):
+        return self._data.get('dm_channel_id')
+
+    @send_id.setter
+    def send_id(self, send_id):
+        self._data['dm_channel_id'] = send_id
+
+    def name(self):
+        return self._data['profile']['real_name']
 
     def __str__(self):
         return self.id
@@ -57,7 +79,7 @@ class Channel(Receiver):
         return self._channel_id
 
     @property
-    def channel_id(self):
+    def send_id(self):
         return self._channel_id
 
     @property
@@ -292,6 +314,6 @@ class Message(Serializer):
         if data.get('text') is False and data.get('attachments') is None:
             logger.warning('Message must have text or an attachments')
             raise MessageError('No text or attachments')
-        data['channel'] = self.to.channel_id
+        data['channel'] = self.to.send_id
         data['ts'] = self.timestamp
         return data

@@ -11,6 +11,7 @@ from sirbot.facade import BotFacade
 from sirbot.base import Message, User, Channel
 from sirbot.client import RTMClient, HTTPClient
 from sirbot.channel import ChannelManager
+from sirbot.user import UserManager
 from sirbot.queue import IterableQueue
 
 logger = logging.getLogger('sirbot')
@@ -22,7 +23,7 @@ class SirBot:
         self.loop = loop or asyncio.get_event_loop()
 
         # Named tasks, anything the bot is directly responsible for
-        # maintaing the lifecycle of.
+        # maintaining the lifecycle of.
         self._tasks = {}
 
         self._rtm_client = RTMClient(token, loop=self.loop)
@@ -33,12 +34,15 @@ class SirBot:
 
         self.channels = ChannelManager(client=self._http_client)
         self.all_channels = ChannelManager(client=self._http_client)
+        self.users = UserManager(client=self._http_client,
+                                 scheduler=self._scheduler)
         self.commands = {
             'listen': {}
         }
         self.event_handlers = {
             'message': self._message_handler,
             'channel': self._channel_handler,
+            'user_typing': self._user_handler,
         }
         self.mentioned_regex = re.compile(
             r'^(?:\<@(?P<atuser>\w+)\>:?|(?P<username>\w+)) ?(?P<text>.*)$')
@@ -146,7 +150,7 @@ class SirBot:
         """
         logger.debug('Message handler received %s', msg)
         ignoring = ['message_changed', 'message_deleted', 'channel_join',
-                    'channel_leave']
+                    'channel_leave', 'bot_message']
         channel = msg.get('channel', None)
 
         if msg.get('subtype') in ignoring:
@@ -162,22 +166,26 @@ class SirBot:
 
         if 'message' in msg:
             text = msg['message']['text']
-            user = msg['message'].get('user', msg.get('bot_id'))
+            user = msg['message'].get('bot_id', msg.get('user'))
             timestamp = msg['message']['ts']
         else:
             text = msg['text']
-            user = msg.get('user', msg.get('bot_id'))
+            user = msg.get('bot_id', msg.get('user'))
             timestamp = msg['ts']
+
+        if user.startswith('B'):
+            return
 
         message = Message(text=text, timestamp=timestamp)
 
         if channel.startswith('D'):
             # If the channel starts with D it is a direct message to the bot
-            user = User(user, msg['channel'])
+            user = await self.users.get(user)
+            user.send_id = channel
             message.frm = user
             message.to = user
         else:
-            message.frm = User(user)
+            message.frm = await self.users.get(user, dm=True)
             message.to = await self.channels.get(msg['channel'])
 
         await self._plugin_dispatcher(message)
@@ -223,6 +231,20 @@ class SirBot:
         else:
             logger.debug('No channel event handler for this type %s, '
                          'ignoring ...', msg_type)
+
+    async def _user_handler(self, msg):
+        """
+        Handler for the incoming message of type 'user_typing'
+
+        Update the UserManager to keep track of active user
+
+        :param msg: Incoming message
+        """
+        user = msg.get('user')
+        if user not in self.users.users:
+            user = await self._http_client.get_user_info(user)
+            user = User(user['id'], **user)
+            self.users.add(user)
 
     async def _plugin_dispatcher(self, msg):
         """
