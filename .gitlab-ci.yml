@@ -1,11 +1,12 @@
 image: python:3.5
 
 stages:
-  - build
+  - lint
   - test
+  - build
 
 lint:
-  stage: build
+  stage: lint
   script:
   - python setup.py flake8
 
@@ -13,3 +14,9 @@ test:
   stage: test
   script:
   - python setup.py test
+
+doc:
+  stage: test
+  script:
+  - pip install -r requirements_dev.txt
+  - sphinx-build -nW -b html -d docs/_build/doctrees docs/ docs/_build/html

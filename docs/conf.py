@@ -16,6 +16,8 @@
 import sys
 import os
 
+from recommonmark.parser import CommonMarkParser
+
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory is
 # relative to the documentation root, use os.path.abspath to make it
@@ -46,7 +48,12 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode']
 templates_path = ['_templates']
 
 # The suffix of source filenames.
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
+
+# Markdown parser
+source_parsers = {
+    '.md': CommonMarkParser,
+}
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
@@ -131,7 +138,7 @@ html_theme = 'default'
 
 # The name of an image file (relative to this directory) to place at the
 # top of the sidebar.
-# html_logo = None
+html_logo = '../icon.png'
 
 # The name of an image file (within the static path) to use as favicon
 # of the docs.  This file should be a Windows icon file (.ico) being
@@ -153,7 +160,7 @@ html_static_path = ['_static']
 # html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-# html_sidebars = {}
+html_sidebars = {'**': ['globaltoc.html', 'relations.html', 'sourcelink.html', 'searchbox.html'],}
 
 # Additional templates that should be rendered to pages, maps page names
 # to template names.

@@ -1,1 +1,4 @@
+=======
+History
+=======
 .. include:: ../HISTORY.md

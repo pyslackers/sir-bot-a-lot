@@ -53,6 +53,9 @@ class SirBot:
         return self.config
 
     async def _start(self, app: web.Application) -> None:
+        """
+        Startup tasks
+        """
         logger.info('Starting Sir-bot-a-lot ...')
         self._import_plugins()
 
