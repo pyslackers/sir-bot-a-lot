@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to sir-bot-a-lot's documentation!
-======================================
+=========================================
 
 Contents:
 
@@ -14,8 +14,10 @@ Contents:
    readme
    installation
    usage
+   history
    contributing
-   authorshistory
+   authors
+
 
 Indices and tables
 ==================

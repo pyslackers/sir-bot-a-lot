@@ -1,67 +1,68 @@
 import asyncio
-import functools
 import logging
-import re
+import functools
+import pluggy
+import importlib
+import yaml
+
 from typing import Optional
-
 from aiohttp import web
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from sirbot.facade import BotFacade
-from sirbot.base import Message, User, Channel
-from sirbot.client import RTMClient, HTTPClient
-from sirbot.channel import ChannelManager
-from sirbot.user import UserManager
-from sirbot.queue import IterableQueue
+from sirbot.iterable_queue import IterableQueue
+from sirbot.dispatcher import Dispatcher
+from sirbot import hookspecs
 
-logger = logging.getLogger('sirbot')
+logger = logging.getLogger('sirbot.core')
 
 
 class SirBot:
-    def __init__(self, token, *,
+    def __init__(self, config_file=None, *,
                  loop: Optional[asyncio.AbstractEventLoop] = None):
+
         self.loop = loop or asyncio.get_event_loop()
-
-        # Named tasks, anything the bot is directly responsible for
-        # maintaining the lifecycle of.
         self._tasks = {}
+        self._dispatcher = None
+        self._pm = None
 
-        self._rtm_client = RTMClient(token, loop=self.loop)
-        self._rtm_queue = IterableQueue()
-        self._http_client = HTTPClient(token, loop=self.loop)
-        self._scheduler = AsyncIOScheduler()
-        self._scheduler.start()
+        if config_file:
+            self.config = self.load_config(config_file)
+        else:
+            self.config = dict()
 
-        self.channels = ChannelManager(client=self._http_client)
-        self.all_channels = ChannelManager(client=self._http_client)
-        self.users = UserManager(client=self._http_client,
-                                 scheduler=self._scheduler)
-        self.commands = {
-            'listen': {}
-        }
-        self.event_handlers = {
-            'message': self._message_handler,
-            'channel': self._channel_handler,
-            'user_typing': self._user_handler,
-        }
-        self.mentioned_regex = re.compile(
-            r'^(?:\<@(?P<atuser>\w+)\>:?|(?P<username>\w+)) ?(?P<text>.*)$')
+        self._clients = dict()
 
         self._app = web.Application(loop=self.loop)
-        self._app.on_startup.append(self._start_background_tasks)
+        self._app.on_startup.append(functools.partial(self._start))
         self._app.on_cleanup.append(self._clean_background_tasks)
 
-    async def _start_background_tasks(self, app: web.Application):
+    def load_config(self, config_file: str) -> dict:
         """
-        Start the background tasks
-        :param app: aiohttp application instance.
+        Load the configuration from a yaml file and set the core log level
+
+        :param config_file: path of the file
+        :return: configuration
         """
-        self._tasks.update(
-            rtm_connect=app.loop.create_task(
-                self._rtm_client.connect(self._rtm_queue)),
-            rtm_read=app.loop.create_task(self._rtm_read()),
-            get_channels=app.loop.create_task(self._get_channels()),
-        )
+        with open(config_file) as file:
+            self.config = yaml.load(file)
+
+        if 'loglevel' in self.config['core']:
+            logger.setLevel(self.config['core']['loglevel'])
+        if 'loglevel' in self.config:
+            logging.getLogger('sirbot').setLevel(self.config['loglevel'])
+
+        return self.config
+
+    async def _start(self, app: web.Application) -> None:
+        logger.info('Starting Sir-bot-a-lot ...')
+        self._import_plugins()
+
+        self._incoming_queue = IterableQueue(loop=self.loop)
+        self._dispatcher = Dispatcher(self._pm, self.config, self.loop)
+
+        await self._initialize_clients()
+
+        self._tasks['incoming'] = self.loop.create_task(
+            self._read_incoming_queue())
 
         # Ensure that if futures exit on error, they aren't silently ignored.
         def print_if_err(f):
@@ -72,247 +73,69 @@ class SirBot:
         for task in self._tasks.values():
             task.add_done_callback(print_if_err)
 
-    async def _clean_background_tasks(self, app):
+        logger.info('Sir-bot-a-lot started !')
+
+    async def _initialize_clients(self) -> None:
+        """
+        Initialize and start the clients
+        """
+        logger.debug('Initializing clients')
+        clients = self._pm.hook.clients(loop=self.loop,
+                                        config=self.config,
+                                        queue=self._incoming_queue)
+        if clients:
+            for client in clients:
+                self._clients[client[0]] = client[1]
+                self._tasks[client[0]] = self.loop.create_task(
+                    client[1].connect())
+        else:
+            logger.error('No client found')
+
+    def _import_plugins(self) -> None:
+        """
+        Import and register the plugins
+
+        Most likely composed of a client and a dispatcher
+        """
+        logger.debug('Importing plugins')
+        self._pm = pluggy.PluginManager('sirbot')
+        self._pm.add_hookspecs(hookspecs)
+
+        if 'core' in self.config and 'plugins' in self.config['core']:
+            for plugin in self.config['core']['plugins']:
+                p = importlib.import_module(plugin)
+                self._pm.register(p)
+
+    async def _clean_background_tasks(self, app) -> None:
         """
         Clean up the background tasks
-        :param app: aiohttp application instance.
         """
         for task in self._tasks.values():
             task.cancel()
         await asyncio.gather(*self._tasks.values(), loop=self.loop)
 
-    async def _rtm_read(self):
+    async def _read_incoming_queue(self) -> None:
         """
-        Read the from the message queue, most likely full of data
-        from the Real Time Slack API.
-        """
-        try:
-            rtm_q = self._rtm_queue
-            async for message in rtm_q:
-                await self._dispatch_message(message)
-                rtm_q.task_done()
-        except asyncio.CancelledError:
-            pass
-
-    async def _dispatch_message(self, msg):
-        """
-        Dispatch the incoming slack message to the correct event handler.
-
-        :param msg: incoming message
-        """
-        msg_type = msg.get('type', None)
-        ok = msg.get('ok', None)
-
-        if msg_type.startswith('channel'):
-            msg_type = 'channel'
-
-        if msg_type == 'hello':
-            logger.info('login data ok')
-        elif ok:
-            if msg.get('warning'):
-                logger.info('API response: %s, %S', msg.get('warning'), msg)
-            logger.debug('API response: %s', msg)
-        elif ok is False:
-            logger.info('API error: %s, %s', msg.get('error'), msg)
-        elif msg_type is None:
-            logging.debug('Ignoring non event message %s', msg)
-            return
-        elif msg_type == "reconnect_url":
-            # Don't log reconnect_url message
-            return
-        else:
-            logger.debug('Event Received: %s', msg)
-
-        await self._dispatch_handler(msg, msg_type)
-
-    async def _dispatch_handler(self, msg, msg_type):
-        event_handler = self.event_handlers.get(msg_type)
-
-        if event_handler is None:
-            logger.debug('No event handler for this type %s, '
-                         'ignoring ...', msg_type)
-            return
-        try:
-            await event_handler(msg)
-        except Exception:
-            logger.exception('There was an issue with event handler %s',
-                             event_handler)
-
-    async def _message_handler(self, msg):
-        """
-        Handler for the incoming message of type 'message'
-
-        Create a message object from the incoming message and sent it
-        to the plugins
-
-        :param msg: incoming message
-        :return:
-        """
-        logger.debug('Message handler received %s', msg)
-        ignoring = ['message_changed', 'message_deleted', 'channel_join',
-                    'channel_leave', 'bot_message']
-        channel = msg.get('channel', None)
-
-        if msg.get('subtype') in ignoring:
-            logger.debug('Ignoring %s subtype', msg.get('subtype'))
-            return
-        else:
-            logger.debug('Message Received: %s', msg)
-
-        if channel[0] not in 'CGD':
-            logger.debug('Unknown channel, Unable to handle this channel: %s',
-                         channel)
-            return
-
-        if 'message' in msg:
-            text = msg['message']['text']
-            user = msg['message'].get('bot_id', msg.get('user'))
-            timestamp = msg['message']['ts']
-        else:
-            text = msg['text']
-            user = msg.get('bot_id', msg.get('user'))
-            timestamp = msg['ts']
-
-        if user.startswith('B'):
-            return
-
-        message = Message(text=text, timestamp=timestamp)
-
-        if channel.startswith('D'):
-            # If the channel starts with D it is a direct message to the bot
-            user = await self.users.get(user)
-            user.send_id = channel
-            message.frm = user
-            message.to = user
-        else:
-            message.frm = await self.users.get(user, dm=True)
-            message.to = await self.channels.get(msg['channel'])
-
-        await self._plugin_dispatcher(message)
-
-    async def _channel_handler(self, msg):
-        """
-        Handler for the incoming message of type 'channel'
-
-        Update both ChannelManager (bot channels and all channels) to keep an
-        accurate inventory of the available channels.
-
-        :param msg: Incoming message
-        """
-        logger.debug('Channel handler received %s', msg)
-
-        msg_type = msg['type']
-        try:
-            channel_id = msg['channel'].get('id')
-        except AttributeError:
-            channel_id = msg['channel']
-
-        if msg_type == 'channel_created':
-            channel = Channel(channel_id=channel_id, **msg['channel'])
-            self.all_channels.add(channel)
-        elif msg_type == 'channel_deleted':
-            self.all_channels.delete(channel_id)
-            self.channels.delete(channel_id)
-        elif msg_type == 'channel_joined':
-            channel = self.all_channels.get(channel_id)
-            self.channels.add(channel)
-        elif msg_type == 'channel_left':
-            self.channels.delete(channel_id)
-        elif msg_type == 'channel_archive':
-            self.all_channels.delete(channel_id)
-            self.channels.delete(channel_id)
-        elif msg_type == 'channel_unarchive':
-            channel = Channel(channel_id=channel_id, name=channel_id)
-            self.all_channels.add(channel)
-            await self.all_channels.update(channel)
-        elif msg_type == 'channel_rename':
-            channel = await self.all_channels.get(channel_id)
-            channel.name = msg['channel']['name']
-        else:
-            logger.debug('No channel event handler for this type %s, '
-                         'ignoring ...', msg_type)
-
-    async def _user_handler(self, msg):
-        """
-        Handler for the incoming message of type 'user_typing'
-
-        Update the UserManager to keep track of active user
-
-        :param msg: Incoming message
-        """
-        user = msg.get('user')
-        if user not in self.users.users:
-            user = await self._http_client.get_user_info(user)
-            user = User(user['id'], **user)
-            self.users.add(user)
-
-    async def _plugin_dispatcher(self, msg):
-        """
-        Dispatch message to plugins
-        """
-        for matcher, func in self.commands['listen'].items():
-            n = matcher.search(msg.text)
-            if n:
-                logger.debug('Located handler for text, invoking')
-                rep = Message(to=msg.to, frm=msg.frm, incoming=msg)
-                await func(rep, n.groups(),
-                           chat=BotFacade(self._http_client, self._scheduler))
-
-    async def _get_channels(self):
-        """
-        Query all the channels of the team and update both ChannelManager
-
-        Should be use only at startup. The channel handler keep both
-        ChannelManager up to date afterwards by processing incoming channel
-        event.
+        Read from the incoming message queue
         """
         try:
-            bot_channels, all_channels = await self._http_client.get_channels()
-            self.channels.add(*bot_channels)
-            self.all_channels.add(*all_channels)
-            logger.info('Bot in channels: %s', self.channels.channels.keys())
-            logger.info('All channels: %s', self.all_channels.channels.keys())
+            async for message in self._incoming_queue:
+                logger.debug('Incoming message received from %s',
+                             message[0])
+                await self._dispatcher.incoming_message(message[0], message[1])
+                self._incoming_queue.task_done()
         except asyncio.CancelledError:
             pass
 
     @property
-    def bot_id(self):
-        return self._rtm_client.slack_id
-
-    @property
-    def app(self):
-        """Return the composed aiohttp application"""
+    def app(self) -> web.Application:
+        """
+        Return the composed aiohttp application
+        """
         return self._app
 
-    def listen(self, matchstr, flags=0, func=None):
+    def run(self, host: str = '0.0.0.0', port: int = 8080):
         """
-        DEPRECATED
-
-        Decorator to register a plugin method. The plugin method will be called
-        with a Message object and the message can be replied to with methods on
-        the SirBot instance.
-
-        This has been deprecated in favor of an upcoming plugin API (where the
-        server will discover and use installed/available plugins).
-
-        :param matchstr: The string (regex) to match in messages
-        :param flags: Regex flags to use
-        :param func: Function to call, note: this will be auto-resolved.
-        :return: Original function, unmodified.
+        Start the bot
         """
-        if func is None:
-            logger.debug('No function provided, providing a partial.')
-            return functools.partial(self.listen, matchstr, flags)
-        wrapped = func
-
-        if not asyncio.iscoroutinefunction(wrapped):
-            logger.debug('Function is not a coroutine, converting.')
-            wrapped = asyncio.coroutine(wrapped)
-        logger.debug('Registering listener for "%s"', matchstr)
-        self.commands['listen'][re.compile(matchstr, flags)] = wrapped
-
-        # Return original func
-        return func
-
-    def run(self, host: str='0.0.0.0', port: int=8080):
         web.run_app(self._app, host=host, port=port)

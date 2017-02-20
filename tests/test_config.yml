@@ -1,0 +1,5 @@
+loglevel: 10
+core:
+  loglevel: 20
+  plugins:
+    - tests.test_plugin

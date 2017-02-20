@@ -69,9 +69,11 @@ setup(
     ],
     packages=[
         'sirbot',
+        'sirbot.plugins',
     ],
     package_dir={
-        'sirbot': 'sirbot'
+        'sirbot': 'sirbot',
+        'plugins': 'sirbot/plugins',
     },
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and
@@ -84,12 +86,19 @@ setup(
     # },
     # If there are data files included in your packages that need to be
     # installed, specify them here.
+    entry_points={
+        'console_scripts': [
+            'sirbot=sirbot.cli:main'
+        ]
+    },
     include_package_data=True,
     install_requires=parse_reqs(),
     zip_safe=False,
     tests_require=[
-        'pytest',
+        'pytest-runner',
+        'pytest-cov',
         'pytest-aiohttp',
+        'pytest',
     ],
     setup_requires=[
         'pytest-runner',
@@ -117,5 +126,5 @@ setup(
     url=PKG_META['url'],
     version=PKG_META['version'],
     maintainer="pythondev slack community",
-    maintainer_email="ovv@outlook.com"
+    maintainer_email=PKG_META['author_email']
 )
