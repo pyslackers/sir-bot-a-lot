@@ -79,3 +79,11 @@ class Message:
         """
         return Message(to=self.to,
                        incoming=self)
+
+    def clone(self):
+        """
+        Clone the message except the content
+        :return: Message
+        """
+        return Message(to=self.to, incoming=self.incoming, frm=self.frm,
+                       timestamp=self.timestamp)
