@@ -53,13 +53,12 @@ class Dispatcher:
         There should be one dispatcher by receiver
         """
         logger.debug('Initializing dispatchers')
-        dispatchers = self._pm.hook.dispatchers(
-            config=self._config,
-            loop=self._loop)
+        dispatchers = self._pm.hook.dispatchers(loop=self._loop)
 
         if dispatchers:
             for dispatcher in dispatchers:
                 self._dispatchers[dispatcher[0]].append(dispatcher[1])
                 self._facades[dispatcher[0]] = dispatcher[1].facade
+                dispatcher[1].configure(self._config.get(dispatcher[0]))
         else:
             logger.error('No dispatchers found')

@@ -8,7 +8,7 @@ hookspec = pluggy.HookspecMarker('sirbot')
 
 
 @hookspec
-def dispatchers(loop, config, queue):
+def dispatchers(loop):
     pass
 
 

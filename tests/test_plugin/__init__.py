@@ -9,5 +9,5 @@ def clients(loop, queue):
 
 
 @hookimpl
-def dispatchers(loop, config):
-    return 'test', Dispatcher(loop=loop, config=config)
+def dispatchers(loop):
+    return 'test', Dispatcher(loop=loop)
