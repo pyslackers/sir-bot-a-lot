@@ -90,7 +90,7 @@ class SirBot:
             for client in clients:
                 self._clients[client[0]] = client[1]
                 self._tasks[client[0]] = self.loop.create_task(
-                    client[1].connect())
+                    client[1].connect(self.config.get(client[0])))
         else:
             logger.error('No client found')
 
@@ -125,10 +125,16 @@ class SirBot:
             async for message in self._incoming_queue:
                 logger.debug('Incoming message received from %s',
                              message[0])
-                await self._dispatcher.incoming_message(message[0], message[1])
-                self._incoming_queue.task_done()
+                future = asyncio.ensure_future(
+                    self._dispatcher.incoming_message(message[0], message[1]),
+                    loop=self.loop)
+                future.add_done_callback(self._set_queue_task_done)
+
         except asyncio.CancelledError:
             pass
+
+    def _set_queue_task_done(self, *_):
+        self._incoming_queue.task_done()
 
     @property
     def app(self) -> web.Application:
