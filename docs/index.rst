@@ -6,14 +6,15 @@
 Welcome to sir-bot-a-lot's documentation!
 =========================================
 
-Contents:
+A slack bot built for the people and by the people of the python developers slack community. https://pythondev.slack.com/
 
 .. toctree::
    :maxdepth: 2
 
-   readme
+   quickstart
    installation
    usage
+   modules
    history
    contributing
    authors

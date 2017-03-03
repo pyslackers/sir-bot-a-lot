@@ -2,6 +2,10 @@
 Usage
 =====
 
-To use sirbot in a project::
+To use Sir-bot-a-lot in a project:
 
-    import sirbot
+.. code-block:: python
+
+    from sirbot import SirBot
+    bot = SirBot(config_file=args.config)
+    bot.run(port=8080)
