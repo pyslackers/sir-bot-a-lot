@@ -62,3 +62,8 @@ class Dispatcher:
                 dispatcher[1].configure(self._config.get(dispatcher[0]))
         else:
             logger.error('No dispatchers found')
+
+    async def middleware_factory(self, app, handler):
+        async def middleware_handler(request):
+            return await handler(request, MainFacade(self._facades))
+        return middleware_handler

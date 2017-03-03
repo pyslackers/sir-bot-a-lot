@@ -45,5 +45,5 @@ async def test_plugin_import_error(loop):
 async def test_initialize_clients(loop, test_server):
     bot = sirbot.SirBot(loop=loop, config_file='tests/test_config.yml')
     await test_server(bot._app)
-    await bot._initialize_clients()
+    await bot._connect_client()
     assert isinstance(bot._clients.get('test'), Client)
