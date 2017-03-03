@@ -8,6 +8,8 @@ Installation
 Stable release
 --------------
 
+**NOT YET RELEASED**
+
 To install sir-bot-a-lot, run this command in your terminal:
 
 .. code-block:: console
