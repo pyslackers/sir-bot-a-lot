@@ -5,7 +5,7 @@ from .dispatcher import Dispatcher
 
 @hookimpl
 def clients(loop, queue):
-    return 'test', Client(loop=loop)
+    return 'test', Client(loop, queue)
 
 
 @hookimpl

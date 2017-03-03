@@ -2,10 +2,13 @@ import asyncio
 
 
 class Client:
-    def __init__(self, loop):
+    def __init__(self, loop, queue):
         self.loop = loop
 
-    async def connect(self, config):
+    def configure(self, config, router):
+        pass
+
+    async def connect(self):
         while self.loop.is_running():
             try:
                 await asyncio.sleep(2, loop=self.loop)

@@ -31,9 +31,19 @@ class SirBot:
 
         self._clients = dict()
 
-        self._app = web.Application(loop=self.loop)
+        logger.info('Initializing Sir-bot-a-lot')
+
+        self._import_plugins()
+        self._incoming_queue = IterableQueue(loop=self.loop)
+        self._dispatcher = Dispatcher(self._pm, self.config, self.loop)
+
+        self._app = web.Application(loop=self.loop,
+                                    middlewares=(
+                                        self._dispatcher.middleware_factory,))
         self._app.on_startup.append(functools.partial(self._start))
         self._app.on_cleanup.append(self._clean_background_tasks)
+
+        self._initialize_clients()
 
     def load_config(self, config_file: str) -> dict:
         """
@@ -57,12 +67,8 @@ class SirBot:
         Startup tasks
         """
         logger.info('Starting Sir-bot-a-lot ...')
-        self._import_plugins()
 
-        self._incoming_queue = IterableQueue(loop=self.loop)
-        self._dispatcher = Dispatcher(self._pm, self.config, self.loop)
-
-        await self._initialize_clients()
+        await self._connect_client()
 
         self._tasks['incoming'] = self.loop.create_task(
             self._read_incoming_queue())
@@ -78,21 +84,26 @@ class SirBot:
 
         logger.info('Sir-bot-a-lot started !')
 
-    async def _initialize_clients(self) -> None:
+    def _initialize_clients(self) -> None:
         """
         Initialize and start the clients
         """
         logger.debug('Initializing clients')
         clients = self._pm.hook.clients(loop=self.loop,
-                                        config=self.config,
                                         queue=self._incoming_queue)
         if clients:
             for client in clients:
                 self._clients[client[0]] = client[1]
-                self._tasks[client[0]] = self.loop.create_task(
-                    client[1].connect(self.config.get(client[0])))
+                client[1].configure(self.config.get(client[0]),
+                                    self._app.router)
         else:
             logger.error('No client found')
+
+    async def _connect_client(self) -> None:
+        logger.debug('Connecting clients')
+        for name, client in self._clients.items():
+            self._tasks[name] = self.loop.create_task(
+                client.connect())
 
     def _import_plugins(self) -> None:
         """
