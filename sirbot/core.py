@@ -3,7 +3,6 @@ import logging
 import functools
 import pluggy
 import importlib
-import yaml
 
 from typing import Optional
 from aiohttp import web
@@ -16,18 +15,15 @@ logger = logging.getLogger('sirbot.core')
 
 
 class SirBot:
-    def __init__(self, config_file=None, *,
+    def __init__(self, config=None, *,
                  loop: Optional[asyncio.AbstractEventLoop] = None):
 
         self.loop = loop or asyncio.get_event_loop()
         self._tasks = {}
         self._dispatcher = None
         self._pm = None
-
-        if config_file:
-            self.config = self.load_config(config_file)
-        else:
-            self.config = dict()
+        self.config = config or {}
+        self._configure()
 
         self._clients = dict()
 
@@ -45,22 +41,17 @@ class SirBot:
 
         self._initialize_clients()
 
-    def load_config(self, config_file: str) -> dict:
+    def _configure(self) -> None:
         """
-        Load the configuration from a yaml file and set the core log level
+        Configure Sirbot
 
-        :param config_file: path of the file
-        :return: configuration
+=       :return: None
         """
-        with open(config_file) as file:
-            self.config = yaml.load(file)
 
-        if 'loglevel' in self.config['core']:
+        if 'loglevel' in self.config.get('core', {}):
             logger.setLevel(self.config['core']['loglevel'])
         if 'loglevel' in self.config:
             logging.getLogger('sirbot').setLevel(self.config['loglevel'])
-
-        return self.config
 
     async def _start(self, app: web.Application) -> None:
         """

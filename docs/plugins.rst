@@ -1,13 +1,13 @@
-.. _modules:
+.. _plugins:
 
 =======
-Modules
+Plugins
 =======
 
-Available modules
+Available plugins
 -----------------
 
-.. _available_modules:
+.. _available_plugins:
 
  * `Slack`_
  * `Web`_
@@ -15,10 +15,10 @@ Available modules
 .. _Slack: https://gitlab.com/PythonDevCommunity/sirbot-plugin-slack
 .. _Web: https://gitlab.com/PythonDevCommunity/sirbot-plugin-web
 
-Writing modules
+Writing plugins
 ---------------
 
-.. _writing_modules:
+.. _writing_plugins:
 
 Sir-bot-a-lot is build onto the `pluggy`_ library for plugins management.
 
@@ -35,7 +35,7 @@ the dispatchers.
 Clients
 ^^^^^^^
 
-The client is the part of a module receiving data from the outside world.
+The client is the part of a plugin receiving data from the outside world.
 
 .. literalinclude:: ../sirbot/plugins/client.py
 
@@ -43,7 +43,7 @@ The client is the part of a module receiving data from the outside world.
 Dispatcher
 ^^^^^^^^^^
 
-The dispatcher is the part of a module processing the incoming data and acting on it.
+The dispatcher is the part of a plugin processing the incoming data and acting on it.
 It should also provide a facade for plugins to interact between them
 
 .. literalinclude:: ../sirbot/plugins/dispatcher.py
