@@ -37,10 +37,6 @@ Once you have a copy of the source, you can install it with:
 
     $ pip install sir-bot-a-lot/
 
-More installation instruction can be found :ref:`here <installation>`.
-
-.. _gitlab repo: https://gitlab.com/PythonDevCommunity/sir-bot-a-lot
-
 Run
 ---
 
@@ -51,18 +47,19 @@ To start Sir-bot-a-lot use the command
     $ sirbot
 
 By default no plugins are installed so Sir-bot-a-lot will not do anything.
-Check out the :ref:`available plugins page <available_plugins>`.
+Check out the `available plugins`_.
+
+.. _available plugins: http://sir-bot-a-lot.readthedocs.io/en/latest/plugins.html#available-plugins
 
 Configuration
 -------------
-
-The :ref:`configuration file<configuration>` is where you tell which plugins to be load.
 
 A basic configuration file will look like this:
 
 .. code-block:: yaml
 
     loglevel: 10
+    port: 8080
 
     core:
       loglevel: 10

@@ -18,6 +18,7 @@ A basic configuration will look like this:
 .. code-block:: yaml
 
     loglevel: 10
+    port: 8080
 
     core:
       loglevel: 10
