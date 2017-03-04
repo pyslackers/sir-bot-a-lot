@@ -52,7 +52,7 @@ def parse_reqs(req_path='./requirements.txt'):
 def parse_readme():
     """Parse contents of the README."""
     # Get the long description from the relevant file
-    readme_file = str(Path(__file__).parent / 'README.md')
+    readme_file = str(Path(__file__).parent / 'README.rst')
     with codecs.open(readme_file, encoding='utf-8') as handle:
         long_description = handle.read()
 

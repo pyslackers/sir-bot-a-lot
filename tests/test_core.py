@@ -10,6 +10,14 @@ import pytest
 
 from tests.test_plugin.client import Client
 
+config = {
+    'loglevel': 10,
+    'core': {
+        'loglevel': 20,
+        'plugins': ['tests.test_plugin']
+    }
+}
+
 async def test_bot_is_starting(loop, test_server):
     bot = sirbot.SirBot(loop=loop)
     await test_server(bot._app)
@@ -26,11 +34,11 @@ async def test_load_config(loop):
             'plugins': ['tests.test_plugin']
         }
     }
-    bot = sirbot.SirBot(loop=loop, config_file='tests/test_config.yml')
+    bot = sirbot.SirBot(loop=loop, config=config)
     assert bot.config == config
 
 async def test_plugin_import(loop, test_server):
-    bot = sirbot.SirBot(loop=loop, config_file='tests/test_config.yml')
+    bot = sirbot.SirBot(loop=loop, config=config)
     await test_server(bot._app)
     assert bot._pm.has_plugin('tests.test_plugin')
 
@@ -43,7 +51,7 @@ async def test_plugin_import_error(loop):
         bot._import_plugins()
 
 async def test_initialize_clients(loop, test_server):
-    bot = sirbot.SirBot(loop=loop, config_file='tests/test_config.yml')
+    bot = sirbot.SirBot(loop=loop, config=config)
     await test_server(bot._app)
     await bot._connect_client()
     assert isinstance(bot._clients.get('test'), Client)

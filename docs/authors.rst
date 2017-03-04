@@ -1,5 +1,1 @@
-=======
-Authors
-=======
-
-.. include:: ../AUTHORS.md
+.. include:: ../AUTHORS.rst

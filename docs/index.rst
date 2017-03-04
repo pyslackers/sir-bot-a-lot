@@ -13,11 +13,14 @@ A slack bot built for the people and by the people of the python developers slac
 
    quickstart
    installation
+   configuration
+   plugins
    usage
-   modules
-   history
    contributing
+   changelog
+   history
    authors
+   license
 
 
 Indices and tables
