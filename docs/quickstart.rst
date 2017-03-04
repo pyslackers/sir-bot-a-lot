@@ -24,10 +24,9 @@ Once you have a copy of the source, you can install it with:
 
     $ python setup.py install
 
-More installation instruction can be found `here`_.
+More installation instruction can be found :ref:`here <installation>`.
 
 .. _gitlab repo: https://gitlab.com/PythonDevCommunity/sir-bot-a-lot
-.. _here: http://sir-bot-a-lot.readthedocs.io/en/latest/installation.html
 
 Start
 -----
@@ -39,9 +38,7 @@ To start Sir-bot-a-lot use the command
     $ python run.py -c <configuration-file>
 
 By default no plugins are installed so Sir-bot-a-lot will not do anything.
-Check you the `available module`_.
-
-.. _available module: http://sir-bot-a-lot.readthedocs.io/en/latest/modules.html
+Check out the :ref:`available module page <available_modules>`.
 
 Configuration
 -------------
