@@ -15,9 +15,9 @@ Want to join? `Get an invite`_ !
 
    quickstart
    installation
+   usage
    configuration
    plugins
-   usage
    contributing
    history
    authors

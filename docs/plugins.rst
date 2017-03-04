@@ -4,10 +4,10 @@
 Plugins
 =======
 
+.. _available_plugins:
+
 Available plugins
 -----------------
-
-.. _available_plugins:
 
  * `Slack`_
  * `Web`_
@@ -15,10 +15,10 @@ Available plugins
 .. _Slack: https://gitlab.com/PythonDevCommunity/sirbot-plugin-slack
 .. _Web: https://gitlab.com/PythonDevCommunity/sirbot-plugin-web
 
+.. _writing_plugins:
+
 Writing plugins
 ---------------
-
-.. _writing_plugins:
 
 Sir-bot-a-lot is build onto the `pluggy`_ library for plugins management.
 
