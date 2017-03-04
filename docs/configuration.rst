@@ -10,8 +10,29 @@ configuration.
 The environment variable and command line arguments take precedence over the
 configuration file.
 
+Environment variables
+---------------------
+
+The environment variable take precedence over the command line arguments and the
+configuration file.
+
+* :code:`SIRBOT_PORT`: Port where to run Sir-bot-a-lot
+* :code:`SIRBOT_CONFIG`: Path to Sir-bot-a-lot Yaml config file
+
+Command line arguments
+----------------------
+
+The command line arguments take precedence over the configuration file.
+
+* :code:`-h --help`: Help message
+* :code:`-p --port`: Port where to run Sir-bot-a-lot
+* :code:`-c --config`: Path to Sir-bot-a-lot Yaml config file
+
+Configuration file
+------------------
+
 example
--------
+^^^^^^^
 
 A basic configuration will look like this:
 

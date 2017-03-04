@@ -49,6 +49,7 @@ To start Sir-bot-a-lot use the command
 By default no plugins are installed so Sir-bot-a-lot will not do anything.
 Check out the `available plugins`_.
 
+.. _gitlab repo: https://gitlab.com/PythonDevCommunity/sir-bot-a-lot
 .. _available plugins: http://sir-bot-a-lot.readthedocs.io/en/latest/plugins.html#available-plugins
 
 Configuration

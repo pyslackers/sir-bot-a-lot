@@ -63,7 +63,7 @@ source_parsers = {
 master_doc = 'index'
 
 # General information about the project.
-project = u'sirbot'
+project = u'Sir-bot-a-lot'
 copyright = u"2016, Shawn McElroy"
 
 # The version info for the project you're documenting, acts as replacement
@@ -215,8 +215,8 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass
 # [howto/manual]).
 latex_documents = [
-    ('index', 'sirbot.tex',
-     u'sirbot Documentation',
+    ('index', 'Sir-bot-a-lot.tex',
+     u'Sir-bot-a-lot Documentation',
      u'Shawn McElroy', 'manual'),
 ]
 
@@ -246,8 +246,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'sirbot',
-     u'sirbot Documentation',
+    ('index', 'Sir-bot-a-lot',
+     u'Sir-bot-a-lot Documentation',
      [u'Shawn McElroy'], 1)
 ]
 
@@ -261,10 +261,10 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'sirbot',
-     u'sirbot Documentation',
+    ('index', 'Sir-bot-a-lo',
+     u'Sir-bot-a-lot Documentation',
      u'Shawn McElroy',
-     'sirbot',
+     'Sir-bot-a-lot',
      'One line description of project.',
      'Miscellaneous'),
 ]

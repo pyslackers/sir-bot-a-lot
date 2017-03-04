@@ -27,7 +27,7 @@ Sir-bot-a-lot is build onto the `pluggy`_ library for plugins management.
 Hooks
 ^^^^^
 
-Two hooks are used. Ths first one to load the clients and the second one to load
+Two hooks are used. The first one to load the clients and the second one to load
 the dispatchers.
 
 .. literalinclude:: ../sirbot/hookspecs.py

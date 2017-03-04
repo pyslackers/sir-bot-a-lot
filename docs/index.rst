@@ -19,7 +19,6 @@ Want to join? `Get an invite`_ !
    plugins
    usage
    contributing
-   changelog
    history
    authors
    license
