@@ -56,14 +56,14 @@ Check out the :ref:`available plugins page <available_plugins>`.
 Configuration
 -------------
 
-The :ref:`configuration file<configuration>` is where you tell which plugins to be load.
+The configuration file is where you tell which plugins to be load.
 
-A basic configuration file will look like this:
+A basic configuration will look like this:
 
 .. code-block:: yaml
 
     loglevel: 10
-
+    port: 8080
     core:
       loglevel: 10
       plugins:

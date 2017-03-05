@@ -1,3 +1,4 @@
 loglevel: 10
+port: 6789
 core:
   loglevel: 10

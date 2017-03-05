@@ -10,10 +10,10 @@ Available plugins
 -----------------
 
  * `Slack`_
- * `Web`_
+ * `Pythondev plugins repositorie`_
 
-.. _Slack: https://gitlab.com/PythonDevCommunity/sirbot-plugin-slack
-.. _Web: https://gitlab.com/PythonDevCommunity/sirbot-plugin-web
+.. _Slack: http://sirbot-plugin-slack.readthedocs.io/en/latest/
+.. _Pythondev plugins repositorie: https://gitlab.com/PythonDevCommunity/sirbot-plugin
 
 .. _writing_plugins:
 
@@ -24,26 +24,25 @@ Sir-bot-a-lot is build onto the `pluggy`_ library for plugins management.
 
 .. _pluggy: https://github.com/pytest-dev/pluggy
 
-Hooks
-^^^^^
 
-Two hooks are used. The first one to load the clients and the second one to load
-the dispatchers.
+A plugin must define one hook returning the plugin name and a subclass of the plugin class.
 
 .. literalinclude:: ../sirbot/hookspecs.py
 
-Clients
+
+.. literalinclude:: ../sirbot/plugin.py
+
+
+Example
 ^^^^^^^
 
-The client is the part of a plugin receiving data from the outside world.
+The `giphy`_ plugin provide a simple facade for the `Giphy.com`_ API.
+It can be retrieve inside another plugin with:
 
-.. literalinclude:: ../sirbot/plugins/client.py
+.. code-block:: python
+
+    facades.get('giphy')
 
 
-Dispatcher
-^^^^^^^^^^
-
-The dispatcher is the part of a plugin processing the incoming data and acting on it.
-It should also provide a facade for plugins to interact between them
-
-.. literalinclude:: ../sirbot/plugins/dispatcher.py
+.. _giphy: https://gitlab.com/PythonDevCommunity/sirbot-plugin/blob/master/sirbot_plugin/giphy.py
+.. _Giphy.com: http://giphy.com/

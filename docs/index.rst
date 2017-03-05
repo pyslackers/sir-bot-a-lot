@@ -16,8 +16,8 @@ Want to join? `Get an invite`_ !
    quickstart
    installation
    usage
-   configuration
    plugins
+   facade
    contributing
    history
    authors

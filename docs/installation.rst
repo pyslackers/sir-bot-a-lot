@@ -46,6 +46,12 @@ Once you have a copy of the source, you can install it with:
 
 .. code-block:: console
 
+    $ python setup.py install
+
+or:
+
+.. code-block:: console
+
     $ pip install sir-bot-a-lot/
 
 
