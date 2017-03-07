@@ -7,9 +7,8 @@ import importlib
 from typing import Optional
 from aiohttp import web
 
-from sirbot.iterable_queue import IterableQueue
-from sirbot.dispatcher import Dispatcher
-from sirbot import hookspecs
+from . import hookspecs
+from .facade import MainFacade
 
 logger = logging.getLogger('sirbot.core')
 
@@ -18,28 +17,27 @@ class SirBot:
     def __init__(self, config=None, *,
                  loop: Optional[asyncio.AbstractEventLoop] = None):
 
+        self.config = config or {}
+        self._configure()
+        logger.info('Initializing Sir-bot-a-lot')
+
         self.loop = loop or asyncio.get_event_loop()
         self._tasks = {}
         self._dispatcher = None
         self._pm = None
-        self.config = config or {}
-        self._configure()
-
-        self._clients = dict()
-
-        logger.info('Initializing Sir-bot-a-lot')
+        self._plugins = dict()
+        self._facades = dict()
 
         self._import_plugins()
-        self._incoming_queue = IterableQueue(loop=self.loop)
-        self._dispatcher = Dispatcher(self._pm, self.config, self.loop)
-
         self._app = web.Application(loop=self.loop,
-                                    middlewares=(
-                                        self._dispatcher.middleware_factory,))
+                                    middlewares=(self._middleware_factory,))
         self._app.on_startup.append(functools.partial(self._start))
         self._app.on_cleanup.append(self._clean_background_tasks)
 
-        self._initialize_clients()
+        self._initialize_plugins()
+        self._registering_facades()
+        self._configuring_plugins()
+        logger.info('Sir-bot-a-lot Initialized')
 
     def _configure(self) -> None:
         """
@@ -59,10 +57,7 @@ class SirBot:
         """
         logger.info('Starting Sir-bot-a-lot ...')
 
-        await self._connect_client()
-
-        self._tasks['incoming'] = self.loop.create_task(
-            self._read_incoming_queue())
+        await self._start_plugins()
 
         # Ensure that if futures exit on error, they aren't silently ignored.
         def print_if_err(f):
@@ -75,26 +70,36 @@ class SirBot:
 
         logger.info('Sir-bot-a-lot started !')
 
-    def _initialize_clients(self) -> None:
+    def _initialize_plugins(self) -> None:
         """
-        Initialize and start the clients
+        Initialize and start the plugins
         """
-        logger.debug('Initializing clients')
-        clients = self._pm.hook.clients(loop=self.loop,
-                                        queue=self._incoming_queue)
-        if clients:
-            for client in clients:
-                self._clients[client[0]] = client[1]
-                client[1].configure(self.config.get(client[0]),
-                                    self._app.router)
+        logger.debug('Initializing plugins')
+        plugins = self._pm.hook.plugins(loop=self.loop)
+        if plugins:
+            for plugin in plugins:
+                self._plugins[plugin[0]] = plugin[1]
         else:
-            logger.error('No client found')
+            logger.error('No plugins found')
 
-    async def _connect_client(self) -> None:
-        logger.debug('Connecting clients')
-        for name, client in self._clients.items():
-            self._tasks[name] = self.loop.create_task(
-                client.connect())
+    def _registering_facades(self) -> None:
+
+        for name, plugin in self._plugins.items():
+            plugin_facade = getattr(plugin, 'facade', None)
+            if callable(plugin_facade):
+                self._facades[name] = plugin.facade
+
+    def _configuring_plugins(self) -> None:
+
+        for name, plugin in self._plugins.items():
+            plugin.configure(self.config.get(name, {}),
+                             self._app.router,
+                             MainFacade(self._facades))
+
+    async def _start_plugins(self) -> None:
+        logger.debug('Starting plugins')
+        for name, plugin in self._plugins.items():
+            self._tasks[name] = self.loop.create_task(plugin.start())
 
     def _import_plugins(self) -> None:
         """
@@ -119,24 +124,11 @@ class SirBot:
             task.cancel()
         await asyncio.gather(*self._tasks.values(), loop=self.loop)
 
-    async def _read_incoming_queue(self) -> None:
-        """
-        Read from the incoming message queue
-        """
-        try:
-            async for message in self._incoming_queue:
-                logger.debug('Incoming message received from %s',
-                             message[0])
-                future = asyncio.ensure_future(
-                    self._dispatcher.incoming_message(message[0], message[1]),
-                    loop=self.loop)
-                future.add_done_callback(self._set_queue_task_done)
-
-        except asyncio.CancelledError:
-            pass
-
-    def _set_queue_task_done(self, *_):
-        self._incoming_queue.task_done()
+    async def _middleware_factory(self, app, handler):
+        async def middleware_handler(request):
+            request['facades'] = MainFacade(self._facades)
+            return await handler(request)
+        return middleware_handler
 
     @property
     def app(self) -> web.Application:
@@ -149,4 +141,4 @@ class SirBot:
         """
         Start the bot
         """
-        web.run_app(self._app, host=host, port=port)
+        web.run_app(self._app, host=host, port=port)  # pragma: no cover

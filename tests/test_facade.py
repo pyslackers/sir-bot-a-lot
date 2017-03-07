@@ -1,36 +1,70 @@
 import sirbot
 import asyncio
+import pytest
 
-from tests.test_plugin.dispatcher import Dispatcher
-from tests.test_plugin.facade import TestFacade
+from sirbot.facade import MainFacade
+from sirbot.errors import FacadeNotAvailable
+
+from tests.test_plugin.sirbot import PluginTest, FacadeTest
 
 config = {
     'loglevel': 10,
     'core': {
         'loglevel': 20,
-        'plugins': ['tests.test_plugin']
+        'plugins': ['tests.test_plugin.sirbot']
     }
 }
 
 
-async def test_facades_are_different(loop, test_server):
+def test_register_facade(loop):
     bot = sirbot.SirBot(loop=loop, config=config)
-    await test_server(bot._app)
-    test_dispatcher = bot._dispatcher._dispatchers.get('test')[0]
-    await bot._incoming_queue.put(('test', {'a': 1}))
-    await bot._incoming_queue.put(('test', {'b': 2}))
-    await asyncio.sleep(0.3, loop=loop)
-    assert test_dispatcher.msg[0][0] != test_dispatcher.msg[1][0]
-    assert test_dispatcher.msg[0][1] != test_dispatcher.msg[1][1]
-    assert test_dispatcher.msg[0][2] != test_dispatcher.msg[1][2]
+    assert 'test' in bot._facades
 
-async def test_get_facade(loop, test_server):
+
+def test_facade_is_correct_function(loop):
     bot = sirbot.SirBot(loop=loop, config=config)
-    await test_server(bot._app)
-    test_dispatcher = bot._dispatcher._dispatchers.get('test')[0]
-    await bot._incoming_queue.put(('test', {'a': 1}))
-    await asyncio.sleep(0.3, loop=loop)
-    test_facade = test_dispatcher.msg[0][2].get('test')
-    assert isinstance(test_facade, TestFacade)
-    no_facade = test_dispatcher.msg[0][2].get('no facade')
-    assert no_facade is None
+    assert isinstance(bot._facades.get('test').__self__, PluginTest)
+    assert bot._facades.get(
+        'test').__qualname__ == PluginTest.facade.__qualname__
+
+
+def test_main_facade(loop):
+    bot = sirbot.SirBot(loop=loop, config=config)
+    facade = MainFacade(bot._facades)
+    second_facade = facade.new()
+    assert isinstance(second_facade, MainFacade)
+    assert type(facade) == type(second_facade)
+
+
+def test_get_facade(loop):
+    bot = sirbot.SirBot(loop=loop, config=config)
+    facade = MainFacade(bot._facades)
+    f = facade.get('test')
+    assert isinstance(f, FacadeTest)
+    with pytest.raises(FacadeNotAvailable) as error:
+        facade.get('foo')
+
+    assert error.value.facade == 'foo'
+
+
+def test_getitem_facade(loop):
+    bot = sirbot.SirBot(loop=loop, config=config)
+    facade = MainFacade(bot._facades)
+    assert isinstance(facade['test'], FacadeTest)
+    with pytest.raises(KeyError):
+        facade['foo']
+
+
+def test_contains_facade(loop):
+    bot = sirbot.SirBot(loop=loop, config=config)
+    facade = MainFacade(bot._facades)
+    assert 'test' in facade
+    assert not 'foo' in facade
+
+
+def test_len_facade(loop):
+    bot = sirbot.SirBot(loop=loop, config=config)
+    facade = MainFacade(bot._facades)
+    assert len(facade) == 1
+
+
