@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import logging.config
 import functools
 import pluggy
 import importlib
@@ -9,6 +10,9 @@ from aiohttp import web
 
 from . import hookspecs
 from .facade import MainFacade
+
+from sirbot.utils import error_callback
+
 
 logger = logging.getLogger('sirbot.core')
 
@@ -21,17 +25,18 @@ class SirBot:
         self._configure()
         logger.info('Initializing Sir-bot-a-lot')
 
-        self.loop = loop or asyncio.get_event_loop()
+        self._loop = loop or asyncio.get_event_loop()
         self._tasks = {}
         self._dispatcher = None
         self._pm = None
         self._plugins = dict()
+        self._started = dict()
         self._facades = dict()
 
         self._import_plugins()
-        self._app = web.Application(loop=self.loop,
-                                    middlewares=(self._middleware_factory,))
-        self._app.on_startup.append(functools.partial(self._start))
+        self._app = web.Application(loop=self._loop,
+                                    middlewares=(self._middleware_factory, ))
+        self._app.on_startup.append(self._start)
         self._app.on_cleanup.append(self._clean_background_tasks)
 
         self._initialize_plugins()
@@ -43,13 +48,13 @@ class SirBot:
         """
         Configure Sirbot
 
-=       :return: None
+        :return: None
         """
 
-        if 'loglevel' in self.config.get('core', {}):
-            logger.setLevel(self.config['core']['loglevel'])
-        if 'loglevel' in self.config:
-            logging.getLogger('sirbot').setLevel(self.config['loglevel'])
+        if 'logging' in self.config:
+            logging.config.dictConfig(self.config['logging'])
+        else:
+            logging.getLogger('sirbot').setLevel('DEBUG')
 
     async def _start(self, app: web.Application) -> None:
         """
@@ -58,27 +63,38 @@ class SirBot:
         logger.info('Starting Sir-bot-a-lot ...')
 
         await self._start_plugins()
-
-        # Ensure that if futures exit on error, they aren't silently ignored.
-        def print_if_err(f):
-            """Logs the error if one occurred causing the task to exit."""
-            if f.exception() is not None:
-                logger.error('Task exited with error: %s', f.exception())
-
+        callback = functools.partial(error_callback, logger=logger)
         for task in self._tasks.values():
-            task.add_done_callback(print_if_err)
+            task.add_done_callback(callback)
 
-        logger.info('Sir-bot-a-lot started !')
+        timeout = 0
+        maxtimeout = 4
+
+        while True:
+            for name, plugin in self._plugins.items():
+                if not self._started[name]:
+                    self._started[name] = plugin.started
+
+            if all(value is True for value in self._started.values()):
+                logger.info('Sir-bot-a-lot fully started !')
+                break
+            else:
+                timeout += 1
+                if timeout == maxtimeout:
+                    logger.error('Error while starting Sir-bot-a-lot')
+                    break
+                await asyncio.sleep(0.5, loop=self._loop)
 
     def _initialize_plugins(self) -> None:
         """
         Initialize and start the plugins
         """
         logger.debug('Initializing plugins')
-        plugins = self._pm.hook.plugins(loop=self.loop)
+        plugins = self._pm.hook.plugins(loop=self._loop)
         if plugins:
             for plugin in plugins:
                 self._plugins[plugin[0]] = plugin[1]
+                self._started[plugin[0]] = False
         else:
             logger.error('No plugins found')
 
@@ -99,7 +115,7 @@ class SirBot:
     async def _start_plugins(self) -> None:
         logger.debug('Starting plugins')
         for name, plugin in self._plugins.items():
-            self._tasks[name] = self.loop.create_task(plugin.start())
+            self._tasks[name] = self._loop.create_task(plugin.start())
 
     def _import_plugins(self) -> None:
         """
@@ -122,7 +138,7 @@ class SirBot:
         """
         for task in self._tasks.values():
             task.cancel()
-        await asyncio.gather(*self._tasks.values(), loop=self.loop)
+        await asyncio.gather(*self._tasks.values(), loop=self._loop)
 
     async def _middleware_factory(self, app, handler):
         async def middleware_handler(request):

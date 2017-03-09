@@ -25,6 +25,7 @@ the sirbot api
 
 
 from .core import SirBot  # noqa
+from .plugin import Plugin  # noqa
 from .__meta__ import DATA  # noqa
 
 __version__ = DATA['version']  # noqa

@@ -1,3 +1,5 @@
+import asyncio
+
 from sirbot.hookimpl import hookimpl
 from sirbot.plugin import Plugin
 
@@ -6,15 +8,21 @@ class PluginTest(Plugin):
     def __init__(self, loop):
         super().__init__(loop)
         self.loop = loop
+        self._started = False
 
     def configure(self, config, router, facades):
         self.config = config
 
     async def start(self):
-        pass
+        await asyncio.sleep(0.1, loop=self.loop)
+        self._started = True
 
     def facade(self):
         return FacadeTest()
+
+    @property
+    def started(self):
+        return self._started
 
 
 class FacadeTest:

@@ -51,20 +51,28 @@ A basic configuration will look like this:
 
 .. code-block:: yaml
 
-    loglevel: 10
     port: 8080
 
     core:
-      loglevel: 10
       plugins:
       - plugin-1
       - plugin-2
 
     plugin-1:
-      loglevel: 10
+        ...
 
     plugin-2:
-      loglevel: 10
+        ...
+
+Logging
+^^^^^^^
+
+Logging can be configured in the :code:`logging` key of the configuration file.
+It use the logging module `dictionnary configuration`_.
+
+Each plugin should define his own logger. The core logger is :code:`sirbot.core`.
+
+.. _dictionnary configuration: https://docs.python.org/3.5/library/logging.config.html#configuration-dictionary-schema
 
 Import
 ------

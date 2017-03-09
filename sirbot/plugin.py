@@ -12,7 +12,6 @@ class Plugin(ABC):  # pragma: no cover
 
         :param loop: asyncio loop
         """
-        pass
 
     def configure(self, config, router, facades):
         """
@@ -37,6 +36,15 @@ class Plugin(ABC):  # pragma: no cover
         :return: None
         """
         pass
+
+    @property
+    def started(self):
+        """
+        Plugins successfully started
+
+        This property should be set as True when the plugin is fully started.
+        """
+        return False
 
     # def facade(self):
     #     """

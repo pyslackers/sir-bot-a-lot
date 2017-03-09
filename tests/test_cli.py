@@ -1,5 +1,6 @@
 import pytest
 import asyncio
+import yaml
 
 from sirbot import cli
 
@@ -20,7 +21,9 @@ def test_argument_parser_port():
 def test_load_config_file():
     config_file = 'tests/test_config.yml'
     config = cli.load_config(config_file)
-    assert config == CONFIG
+    with open(config_file) as f:
+        data = yaml.load(f)
+    assert config == data
 
 
 def test_no_config_file():
