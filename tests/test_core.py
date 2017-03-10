@@ -7,6 +7,7 @@ Tests for `sirbot` module.
 """
 import sirbot
 import pytest
+import logging
 
 from copy import deepcopy
 from aiohttp.web import Response
@@ -16,9 +17,7 @@ from sirbot.facade import MainFacade
 from tests.test_plugin.sirbot import PluginTest
 
 CONFIG = {
-    'loglevel': 10,
     'core': {
-        'loglevel': 20,
         'plugins': ['tests.test_plugin.sirbot']
     },
     'test': {
@@ -33,14 +32,34 @@ async def test_bot_is_starting(loop, test_server):
 
 async def test_load_config(loop):
     config = {
-        'loglevel': 10,
         'core': {
-            'loglevel': 20,
             'plugins': ['tests.test_plugin']
         }
     }
     bot = sirbot.SirBot(loop=loop, config=config)
     assert bot.config == config
+
+async def test_logging_config(loop):
+    config = {
+        'logging': {
+            'version': 1,
+            'loggers': {
+                'sirbot.core': {
+                    'level': 'WARNING'
+                },
+                'sirbot': {
+                    'level': 'ERROR'
+                }
+            }
+        },
+        'core': {
+            'plugins': ['tests.test_plugin']
+        }
+    }
+    bot = sirbot.SirBot(loop=loop, config=config)
+
+    assert logging.getLogger('sirbot.core').level == 30
+    assert logging.getLogger('sirbot').level == 40
 
 async def test_plugin_import(loop, test_server):
     bot = sirbot.SirBot(loop=loop, config=CONFIG)
@@ -76,6 +95,7 @@ async def test_plugin_task_error(loop, test_server, capsys):
     out, err = capsys.readouterr()
     del bot._tasks['test']
     assert 'Task exited with error' in err
+    assert 'Error while starting Sir-bot-a-lot' in err
 
 async def test_middleware(loop, test_client):
 
