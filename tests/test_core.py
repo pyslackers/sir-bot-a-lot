@@ -76,11 +76,11 @@ async def test_plugin_import_error(loop):
 
 async def test_initialize_plugins(loop):
     bot = sirbot.SirBot(loop=loop, config=CONFIG)
-    assert isinstance(bot._plugins.get('test'), PluginTest)
+    assert isinstance(bot._plugins['test']['plugin'], PluginTest)
 
 async def test_plugin_configure(loop):
     bot = sirbot.SirBot(loop=loop, config=CONFIG)
-    assert bot._plugins.get('test').config == CONFIG['test']
+    assert bot._plugins['test']['plugin'].config == CONFIG['test']
 
 async def test_start_plugins(loop, test_server):
     bot = sirbot.SirBot(loop=loop, config=CONFIG)
@@ -93,9 +93,27 @@ async def test_plugin_task_error(loop, test_server, capsys):
     bot = sirbot.SirBot(loop=loop, config=config)
     await test_server(bot._app)
     out, err = capsys.readouterr()
-    del bot._tasks['test']
+    del bot._tasks['test-error']
     assert 'Task exited with error' in err
-    assert 'Error while starting Sir-bot-a-lot' in err
+    assert 'Error while starting' in err
+
+
+async def test_plugin_priority(loop, test_server):
+    config = deepcopy(CONFIG)
+    config['test']['priority'] = 80
+    config['test-error'] = {'priority': 70}
+    config['core']['plugins'].append('tests.test_plugin.sirbot_start_error')
+    bot = sirbot.SirBot(loop=loop, config=config)
+    assert bot._start_priority[80] == ['test']
+    assert bot._start_priority[70] == ['test-error']
+
+
+async def test_plugin_no_start(loop, test_server):
+    config = deepcopy(CONFIG)
+    config['test']['priority'] = False
+    bot = sirbot.SirBot(loop=loop, config=config)
+    assert bot._start_priority == {}
+    assert bot._plugins == {}
 
 async def test_middleware(loop, test_client):
 

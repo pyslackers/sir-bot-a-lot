@@ -7,12 +7,12 @@ import importlib
 
 from typing import Optional
 from aiohttp import web
+from collections import defaultdict
 
 from . import hookspecs
 from .facade import MainFacade
 
 from sirbot.utils import error_callback
-
 
 logger = logging.getLogger('sirbot.core')
 
@@ -30,12 +30,13 @@ class SirBot:
         self._dispatcher = None
         self._pm = None
         self._plugins = dict()
-        self._started = dict()
+
+        self._start_priority = defaultdict(list)
         self._facades = dict()
 
         self._import_plugins()
         self._app = web.Application(loop=self._loop,
-                                    middlewares=(self._middleware_factory, ))
+                                    middlewares=(self._middleware_factory,))
         self._app.on_startup.append(self._start)
         self._app.on_cleanup.append(self._clean_background_tasks)
 
@@ -63,27 +64,8 @@ class SirBot:
         logger.info('Starting Sir-bot-a-lot ...')
 
         await self._start_plugins()
-        callback = functools.partial(error_callback, logger=logger)
-        for task in self._tasks.values():
-            task.add_done_callback(callback)
 
-        timeout = 0
-        maxtimeout = 4
-
-        while True:
-            for name, plugin in self._plugins.items():
-                if not self._started[name]:
-                    self._started[name] = plugin.started
-
-            if all(value is True for value in self._started.values()):
-                logger.info('Sir-bot-a-lot fully started !')
-                break
-            else:
-                timeout += 1
-                if timeout == maxtimeout:
-                    logger.error('Error while starting Sir-bot-a-lot')
-                    break
-                await asyncio.sleep(0.5, loop=self._loop)
+        logger.info('Sir-bot-a-lot fully started')
 
     def _initialize_plugins(self) -> None:
         """
@@ -93,29 +75,65 @@ class SirBot:
         plugins = self._pm.hook.plugins(loop=self._loop)
         if plugins:
             for plugin in plugins:
-                self._plugins[plugin[0]] = plugin[1]
-                self._started[plugin[0]] = False
+                config = self.config.get(plugin[0], {})
+                priority = config.get('priority', True)
+                if priority:
+                    self._plugins[plugin[0]] = {'plugin': plugin[1],
+                                                'config': config,
+                                                'priority': priority
+                                                }
+
+                    if type(priority) == int:
+                        self._start_priority[priority].append(plugin[0])
+                    elif priority:
+                        self._start_priority[50].append(plugin[0])
         else:
             logger.error('No plugins found')
 
     def _registering_facades(self) -> None:
 
-        for name, plugin in self._plugins.items():
-            plugin_facade = getattr(plugin, 'facade', None)
-            if callable(plugin_facade):
-                self._facades[name] = plugin.facade
+        for name, info in self._plugins.items():
+            if info['priority']:
+                plugin_facade = getattr(info['plugin'], 'facade', None)
+                if callable(plugin_facade):
+                    self._facades[name] = info['plugin'].facade
 
     def _configuring_plugins(self) -> None:
 
-        for name, plugin in self._plugins.items():
-            plugin.configure(self.config.get(name, {}),
-                             self._app.router,
-                             MainFacade(self._facades))
+        for name, info in self._plugins.items():
+            if info['priority']:
+                info['plugin'].configure(info['config'],
+                                         self._app.router,
+                                         MainFacade(self._facades))
 
     async def _start_plugins(self) -> None:
         logger.debug('Starting plugins')
-        for name, plugin in self._plugins.items():
-            self._tasks[name] = self._loop.create_task(plugin.start())
+        callback = functools.partial(error_callback, logger=logger)
+
+        max_start_time = 2
+
+        for priority in sorted(self._start_priority, reverse=True):
+            elapsed_time = 0
+            logger.debug('Starting plugins %s',
+                         ', '.join(self._start_priority[priority]))
+            for name in self._start_priority[priority]:
+                plugin = self._plugins[name]
+                self._tasks[name] = self._loop.create_task(
+                    plugin['plugin'].start())
+                self._tasks[name].add_done_callback(callback)
+
+            while not all(self._plugins[name]['plugin'].started for name in
+                          self._start_priority[priority]):
+                await asyncio.sleep(0.2, loop=self._loop)
+                elapsed_time += 0.2
+
+                if elapsed_time >= max_start_time:
+                    logger.error('Error while starting one of %s',
+                                 ', '.join(self._start_priority[priority]))
+                    break
+
+            logger.debug('Plugins %s started',
+                         ', '.join(self._start_priority[priority]))
 
     def _import_plugins(self) -> None:
         """
@@ -144,6 +162,7 @@ class SirBot:
         async def middleware_handler(request):
             request['facades'] = MainFacade(self._facades)
             return await handler(request)
+
         return middleware_handler
 
     @property
