@@ -64,6 +64,23 @@ A basic configuration will look like this:
     plugin-2:
         ...
 
+Starting priority
+^^^^^^^^^^^^^^^^^
+
+As plugins can depend on other plugins startup is done by priority. By default all plugins have a priority of 50.
+Plugins with a higher priority will start before the one with a lower priority.
+
+If multiple plugins have the same priority they will start at the same time.
+
+The priority can be set to false to disable a plugin.
+
+.. code-block:: yaml
+
+    plugin-1:
+        priority: 80
+    plugin-2:
+        priority: False
+
 Logging
 ^^^^^^^
 

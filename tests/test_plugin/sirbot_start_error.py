@@ -9,4 +9,4 @@ class PluginTestStartError(PluginTest):
 
 @hookimpl
 def plugins(loop):
-    return 'test', PluginTestStartError(loop)
+    return 'test-error', PluginTestStartError(loop)
