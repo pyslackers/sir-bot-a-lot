@@ -13,7 +13,7 @@ class Plugin(ABC):  # pragma: no cover
         :param loop: asyncio loop
         """
 
-    def configure(self, config, router, facades):
+    async def configure(self, config, router, session, facades):
         """
         Method called after the initialization of all plugins
 
@@ -21,6 +21,7 @@ class Plugin(ABC):  # pragma: no cover
 
         :param config: configuration for this plugin
         :param router: aiohttp router
+        :param session: aiohttp client session
         :param facades: facades of all available plugins
         :return: None
         """

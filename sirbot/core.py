@@ -4,6 +4,7 @@ import logging.config
 import functools
 import pluggy
 import importlib
+import aiohttp
 
 from typing import Optional
 from aiohttp import web
@@ -42,7 +43,6 @@ class SirBot:
 
         self._initialize_plugins()
         self._registering_facades()
-        self._configuring_plugins()
         logger.info('Sir-bot-a-lot Initialized')
 
     def _configure(self) -> None:
@@ -62,8 +62,9 @@ class SirBot:
         Startup tasks
         """
         logger.info('Starting Sir-bot-a-lot ...')
-
-        await self._start_plugins()
+        with aiohttp.ClientSession(loop=self._loop) as session:
+            await self._configuring_plugins(session)
+            await self._start_plugins()
 
         logger.info('Sir-bot-a-lot fully started')
 
@@ -98,13 +99,20 @@ class SirBot:
                 if callable(plugin_facade):
                     self._facades[name] = info['plugin'].facade
 
-    def _configuring_plugins(self) -> None:
+    async def _configuring_plugins(self, session) -> None:
+        funcs = list()
 
         for name, info in self._plugins.items():
             if info['priority']:
-                info['plugin'].configure(info['config'],
-                                         self._app.router,
-                                         MainFacade(self._facades))
+                funcs.append(info['plugin'].configure(info['config'],
+                                                      self._app.router,
+                                                      session,
+                                                      MainFacade(
+                                                          self._facades)))
+
+        if funcs:
+            await asyncio.wait(funcs, return_when=asyncio.ALL_COMPLETED,
+                               loop=self._loop)
 
     async def _start_plugins(self) -> None:
         logger.debug('Starting plugins')
@@ -131,9 +139,9 @@ class SirBot:
                     logger.error('Error while starting one of %s',
                                  ', '.join(self._start_priority[priority]))
                     break
-
-            logger.debug('Plugins %s started',
-                         ', '.join(self._start_priority[priority]))
+            else:
+                logger.debug('Plugins %s started',
+                             ', '.join(self._start_priority[priority]))
 
     def _import_plugins(self) -> None:
         """
