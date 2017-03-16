@@ -39,10 +39,11 @@ class SirBot:
         self._app = web.Application(loop=self._loop,
                                     middlewares=(self._middleware_factory,))
         self._app.on_startup.append(self._start)
-        self._app.on_cleanup.append(self._clean_background_tasks)
+        self._app.on_cleanup.append(self._stop)
 
         self._initialize_plugins()
         self._registering_facades()
+        self._session = aiohttp.ClientSession(loop=self._loop)
         logger.info('Sir-bot-a-lot Initialized')
 
     def _configure(self) -> None:
@@ -62,11 +63,24 @@ class SirBot:
         Startup tasks
         """
         logger.info('Starting Sir-bot-a-lot ...')
-        with aiohttp.ClientSession(loop=self._loop) as session:
-            await self._configuring_plugins(session)
-            await self._start_plugins()
+
+        await self._configuring_plugins()
+        await self._start_plugins()
 
         logger.info('Sir-bot-a-lot fully started')
+
+    async def _stop(self, app) -> None:
+        """
+        Stoppping tasks
+        """
+        logger.info('Stopping Sir-bot-a-lot ...')
+
+        for task in self._tasks.values():
+            task.cancel()
+        await asyncio.gather(*self._tasks.values(), loop=self._loop)
+        await self._session.close()
+
+        logger.info('Sir-bot-a-lot fully stopped')
 
     def _initialize_plugins(self) -> None:
         """
@@ -99,14 +113,14 @@ class SirBot:
                 if callable(plugin_facade):
                     self._facades[name] = info['plugin'].facade
 
-    async def _configuring_plugins(self, session) -> None:
+    async def _configuring_plugins(self) -> None:
         funcs = list()
 
         for name, info in self._plugins.items():
             if info['priority']:
                 funcs.append(info['plugin'].configure(info['config'],
                                                       self._app.router,
-                                                      session,
+                                                      self._session,
                                                       MainFacade(
                                                           self._facades)))
 
@@ -157,14 +171,6 @@ class SirBot:
             for plugin in self.config['core']['plugins']:
                 p = importlib.import_module(plugin)
                 self._pm.register(p)
-
-    async def _clean_background_tasks(self, app) -> None:
-        """
-        Clean up the background tasks
-        """
-        for task in self._tasks.values():
-            task.cancel()
-        await asyncio.gather(*self._tasks.values(), loop=self._loop)
 
     async def _middleware_factory(self, app, handler):
         async def middleware_handler(request):
