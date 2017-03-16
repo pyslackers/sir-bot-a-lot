@@ -78,8 +78,9 @@ async def test_initialize_plugins(loop):
     bot = sirbot.SirBot(loop=loop, config=CONFIG)
     assert isinstance(bot._plugins['test']['plugin'], PluginTest)
 
-async def test_plugin_configure(loop):
+async def test_plugin_configure(loop, test_server):
     bot = sirbot.SirBot(loop=loop, config=CONFIG)
+    await test_server(bot._app)
     assert bot._plugins['test']['plugin'].config == CONFIG['test']
 
 async def test_start_plugins(loop, test_server):
