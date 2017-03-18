@@ -132,7 +132,7 @@ class SirBot:
         logger.debug('Starting plugins')
         callback = functools.partial(error_callback, logger=logger)
 
-        max_start_time = 2
+        max_start_time = 4
 
         for priority in sorted(self._start_priority, reverse=True):
             elapsed_time = 0
@@ -150,8 +150,8 @@ class SirBot:
                 elapsed_time += 0.2
 
                 if elapsed_time >= max_start_time:
-                    logger.error('Error while starting one of %s',
-                                 ', '.join(self._start_priority[priority]))
+                    logger.warning('Timeout while starting one of %s',
+                                   ', '.join(self._start_priority[priority]))
                     break
             else:
                 logger.debug('Plugins %s started',

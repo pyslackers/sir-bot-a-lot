@@ -96,7 +96,7 @@ async def test_plugin_task_error(loop, test_server, capsys):
     out, err = capsys.readouterr()
     del bot._tasks['test-error']
     assert 'Task exited with error' in err
-    assert 'Error while starting' in err
+    assert 'Timeout while starting' in err
 
 
 async def test_plugin_priority(loop, test_server):
