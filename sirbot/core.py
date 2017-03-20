@@ -30,6 +30,7 @@ class SirBot:
         self._tasks = {}
         self._dispatcher = None
         self._pm = None
+        self._session = None
         self._plugins = dict()
 
         self._start_priority = defaultdict(list)
@@ -43,7 +44,6 @@ class SirBot:
 
         self._initialize_plugins()
         self._registering_facades()
-        self._session = aiohttp.ClientSession(loop=self._loop)
         logger.info('Sir-bot-a-lot Initialized')
 
     def _configure(self) -> None:
@@ -63,7 +63,7 @@ class SirBot:
         Startup tasks
         """
         logger.info('Starting Sir-bot-a-lot ...')
-
+        self._session = aiohttp.ClientSession(loop=self._loop)
         await self._configuring_plugins()
         await self._start_plugins()
 
@@ -178,6 +178,14 @@ class SirBot:
             return await handler(request)
 
         return middleware_handler
+
+    async def update(self):
+        for name, plugin in self._plugins.items():
+            plugin_update = getattr(plugin['plugin'], 'update', None)
+            if callable(plugin_update):
+                logger.info('Updating %s', name)
+                await plugin_update(self.config.get(name, {}), self._plugins)
+                logger.info('%s updated', name)
 
     @property
     def app(self) -> web.Application:
