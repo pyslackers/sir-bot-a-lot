@@ -15,6 +15,9 @@ def parse_args(arguments):
                         help='port where to run sirbot')
     parser.add_argument('-c', '--config', action='store',
                         help='path to the Yaml config file')
+    parser.add_argument('-u', '--update', help='Run update of plugins'
+                                               'if necessary',
+                        action='store_true', dest='update')
 
     return parser.parse_args(arguments)
 
@@ -34,6 +37,15 @@ def start(config, loop=None):  # pragma: no cover
     return bot
 
 
+def update(config, loop=None):
+    if not loop:
+        loop = asyncio.get_event_loop()
+    bot = SirBot(config=config, loop=loop)
+
+    loop.run_until_complete(bot.update())
+    return bot
+
+
 def main():  # pragma: no cover
     args = parse_args(sys.argv[1:])
     logging.basicConfig()
@@ -42,7 +54,11 @@ def main():  # pragma: no cover
     config = load_config(config_file)
     config['port'] = os.getenv('SIRBOT_PORT') or args.port or config.get(
         'port') or 8080
-    start(config)
+
+    if args.update:
+        update(config)
+    else:
+        start(config)
 
 
 if __name__ == '__main__':
