@@ -90,18 +90,19 @@ class SirBot:
         plugins = self._pm.hook.plugins(loop=self._loop)
         if plugins:
             for plugin in plugins:
-                config = self.config.get(plugin[0], {})
+                name = plugin.__name__
+                config = self.config.get(name, {})
                 priority = config.get('priority', True)
                 if priority:
-                    self._plugins[plugin[0]] = {'plugin': plugin[1],
-                                                'config': config,
-                                                'priority': priority
-                                                }
+                    self._plugins[name] = {'plugin': plugin,
+                                           'config': config,
+                                           'priority': priority
+                                           }
 
                     if type(priority) == int:
-                        self._start_priority[priority].append(plugin[0])
+                        self._start_priority[priority].append(name)
                     elif priority:
-                        self._start_priority[50].append(plugin[0])
+                        self._start_priority[50].append(name)
         else:
             logger.error('No plugins found')
 

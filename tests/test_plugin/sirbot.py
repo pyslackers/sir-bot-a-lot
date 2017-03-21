@@ -5,6 +5,8 @@ from sirbot.plugin import Plugin
 
 
 class PluginTest(Plugin):
+    __name__ = 'test'
+
     def __init__(self, loop):
         super().__init__(loop)
         self.loop = loop
@@ -32,4 +34,4 @@ class FacadeTest:
 
 @hookimpl
 def plugins(loop):
-    return 'test', PluginTest(loop)
+    return PluginTest(loop)
