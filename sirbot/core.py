@@ -1,19 +1,18 @@
 import asyncio
+import functools
+import importlib
 import logging
 import logging.config
-import functools
-import pluggy
-import importlib
-import aiohttp
-
-from typing import Optional
-from aiohttp import web
 from collections import defaultdict
+from typing import Optional
 
-from . import hookspecs
-from .facade import MainFacade
+import aiohttp
+import pluggy
+from aiohttp import web
 
 from sirbot.utils import error_callback
+from . import hookspecs
+from .facade import MainFacade
 
 logger = logging.getLogger('sirbot.core')
 
@@ -30,8 +29,9 @@ class SirBot:
         self._tasks = {}
         self._dispatcher = None
         self._pm = None
-        self._session = None
+        self._session = aiohttp.ClientSession(loop=self._loop)
         self._plugins = dict()
+        self._configure_future = None
 
         self._start_priority = defaultdict(list)
         self._facades = dict()
@@ -44,6 +44,7 @@ class SirBot:
 
         self._initialize_plugins()
         self._registering_facades()
+        self._configure_plugins()
         logger.info('Sir-bot-a-lot Initialized')
 
     def _configure(self) -> None:
@@ -63,8 +64,8 @@ class SirBot:
         Startup tasks
         """
         logger.info('Starting Sir-bot-a-lot ...')
-        self._session = aiohttp.ClientSession(loop=self._loop)
-        await self._configuring_plugins()
+        if self._configure_future:
+            await self._configure_future
         await self._start_plugins()
 
         logger.info('Sir-bot-a-lot fully started')
@@ -114,20 +115,28 @@ class SirBot:
                 if callable(plugin_facade):
                     self._facades[name] = info['plugin'].facade
 
-    async def _configuring_plugins(self) -> None:
+    def _configure_plugins(self) -> None:
         funcs = list()
 
         for name, info in self._plugins.items():
             if info['priority']:
-                funcs.append(info['plugin'].configure(info['config'],
-                                                      self._app.router,
-                                                      self._session,
-                                                      MainFacade(
-                                                          self._facades)))
+                funcs.append(
+                    info['plugin'].configure(
+                        config=info['config'],
+                        session=self._session,
+                        facades=MainFacade(self._facades),
+                        router=self.app.router
+                    )
+                )
 
         if funcs:
-            await asyncio.wait(funcs, return_when=asyncio.ALL_COMPLETED,
-                               loop=self._loop)
+            self._configure_future = asyncio.wait(
+                funcs,
+                return_when=asyncio.ALL_COMPLETED,
+                loop=self._loop
+            )
+            if not self._loop.is_running():
+                self._loop.run_until_complete(self._configure_future)
 
     async def _start_plugins(self) -> None:
         logger.debug('Starting plugins')
@@ -176,7 +185,12 @@ class SirBot:
     async def _middleware_factory(self, app, handler):
         async def middleware_handler(request):
             request['facades'] = MainFacade(self._facades)
-            return await handler(request)
+            try:
+                return await handler(request)
+            except aiohttp.web.HTTPNotFound:
+                pass
+            except Exception as e:
+                logger.exception(e)
 
         return middleware_handler
 
