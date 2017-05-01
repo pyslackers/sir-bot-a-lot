@@ -10,6 +10,6 @@ logging:
     sirbot:
       level: DEBUG
       handlers: [console]
-core:
+sirbot:
   plugins:
     - tests.test_plugin.sirbot

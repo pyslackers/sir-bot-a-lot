@@ -14,7 +14,7 @@ def test_argument_parser_config():
 
 
 def test_argument_parser_port():
-    args = cli.parse_args(['-p', '4567'])
+    args = cli.parse_args(['-P', '4567'])
     assert args.port == 4567
 
 
