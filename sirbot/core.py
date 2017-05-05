@@ -58,8 +58,7 @@ class SirBot:
         """
 
         path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            '..', 'config.yml'
+            os.path.dirname(os.path.abspath(__file__)), 'config.yml'
         )
 
         with open(path) as file:

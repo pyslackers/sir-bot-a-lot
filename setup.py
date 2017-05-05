@@ -75,6 +75,9 @@ setup(
         'sirbot': 'sirbot',
         'plugins': 'sirbot/plugins',
     },
+    package_data={
+        'sirbot': ['config.yml']
+    },
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and
     # allow pip to create the appropriate form of executable for the
