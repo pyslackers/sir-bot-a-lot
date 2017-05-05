@@ -1,0 +1,3 @@
+sirbot:
+  port: 8080
+  plugins: []

@@ -9,7 +9,7 @@ from tests.test_plugin.sirbot import PluginTest, FacadeTest
 
 config = {
     'loglevel': 10,
-    'core': {
+    'sirbot': {
         'loglevel': 20,
         'plugins': ['tests.test_plugin.sirbot']
     }
@@ -52,14 +52,14 @@ def test_getitem_facade(loop):
     facade = MainFacade(bot._facades)
     assert isinstance(facade['test'], FacadeTest)
     with pytest.raises(KeyError):
-        facade['foo']
+        _ = facade['foo']
 
 
 def test_contains_facade(loop):
     bot = sirbot.SirBot(loop=loop, config=config)
     facade = MainFacade(bot._facades)
     assert 'test' in facade
-    assert not 'foo' in facade
+    assert 'foo' not in facade
 
 
 def test_len_facade(loop):
