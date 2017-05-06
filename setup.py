@@ -22,12 +22,6 @@ def load_package_meta():
 PKG_META = load_package_meta()
 
 
-requirements = [
-    'Click>=6.0',
-    # TODO: put package requirements here
-]
-
-
 def parse_reqs(req_path='./requirements/requirements.txt'):
     """Recursively parse requirements from nested pip files."""
     install_requires = []
@@ -41,7 +35,6 @@ def parse_reqs(req_path='./requirements/requirements.txt'):
             if line.startswith('-r'):
                 # recursively call this function
                 install_requires += parse_reqs(req_path=line[3:])
-
             else:
                 # add the line as a new requirement
                 install_requires.append(line)
