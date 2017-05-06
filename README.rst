@@ -1,35 +1,34 @@
-=============
-Sir-bot-a-lot
-=============
+======
+|icon|
+======
 
-|build| |coverage| |doc|
+|build| |doc|
 
-A slack bot built for the people and by the people of the `python developers slack community`_.
+A bot framework built for the people and by the people of the `python developers slack community`_.
 
 Want to join? `Get an invite`_ !
 
 .. _Get an invite: http://pythondevelopers.herokuapp.com/
 .. _python developers slack community: https://pythondev.slack.com/
-.. |build| image:: https://gitlab.com/PythonDevCommunity/sir-bot-a-lot/badges/master/build.svg
+.. |build| image:: https://travis-ci.org/pyslackers/sir-bot-a-lot.svg?branch=master
     :alt: Build status
-    :scale: 100%
-    :target: https://gitlab.com/PythonDevCommunity/sir-bot-a-lot/commits/master
-.. |coverage| image:: https://gitlab.com/PythonDevCommunity/sir-bot-a-lot/badges/master/coverage.svg
-    :alt: Coverage status
-    :scale: 100%
-    :target: https://gitlab.com/PythonDevCommunity/sir-bot-a-lot/commits/master
+    :target: https://travis-ci.org/pyslackers/sir-bot-a-lot
 .. |doc| image:: https://readthedocs.org/projects/sir-bot-a-lot/badge/?version=latest
     :alt: Documentation status
-    :target: http://sir-bot-a-lot.readthedocs.io/en/latest/?badge=latest
+    :target: http://sir-bot-a-lot.readthedocs.io/en/latest
+.. |icon| image:: icon/icon-500.png
+    :width: 10%
+    :alt: Sir-bot-a-lot icon
+    :target: http://sir-bot-a-lot.readthedocs.io/en/latest
 
 Instalation
 -----------
 
-The sources for sir-bot-a-lot can be downloaded from the `gitlab repo`_.
+The sources for sir-bot-a-lot can be downloaded from the `github repo`_.
 
 .. code-block:: console
 
-    $ git clone git://gitlab.com/PythonDevCommunity/sir-bot-a-lot
+    $ git clone https://github.com/pyslackers/sir-bot-a-lot.git
 
 Once you have a copy of the source, you can install it with:
 
@@ -46,30 +45,23 @@ To start Sir-bot-a-lot use the command
 
     $ sirbot
 
-By default no plugins are installed so Sir-bot-a-lot will not do anything.
+By default no plugins are installed so Sir-bot-a-lot will do nothing.
 Check out the `available plugins`_.
 
-.. _gitlab repo: https://gitlab.com/PythonDevCommunity/sir-bot-a-lot
+.. _github repo: https://github.com/pyslackers/sir-bot-a-lot
 .. _available plugins: http://sir-bot-a-lot.readthedocs.io/en/latest/plugins.html#available-plugins
 
 Configuration
 -------------
 
-A basic configuration file will look like this:
+To load a custom file use the ``--config`` argument or the ``SIRBOT_CONFIG`` environment variable with the configuration file path.
+
+The default configuration file look like this:
 
 .. code-block:: yaml
 
-    loglevel: 10
-    port: 8080
+    sirbot:
+      port: 8080
+      plugins: []
 
-    core:
-      loglevel: 10
-      plugins:
-      - plugin-1
-      - plugin-2
-
-    plugin-1:
-      loglevel: 10
-
-    plugin-2:
-      loglevel: 10
+Plugins can also be added with the ``--plugins`` argument
