@@ -69,7 +69,7 @@ class SirBot:
         if 'logging' in self.config:
             logging.config.dictConfig(self.config['logging'])
         else:
-            logging.getLogger('sirbot').setLevel('DEBUG')
+            logging.getLogger('sirbot').setLevel('INFO')
 
     async def _start(self, app: web.Application) -> None:
         """
