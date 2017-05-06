@@ -1,7 +1,8 @@
 import asyncio
 
-from sirbot.hookimpl import hookimpl
-from sirbot.plugin import Plugin
+from sirbot.core.plugin import Plugin
+
+from sirbot.core.hookimpl import hookimpl
 
 
 class PluginTest(Plugin):

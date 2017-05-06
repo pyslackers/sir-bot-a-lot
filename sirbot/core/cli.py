@@ -5,7 +5,7 @@ import argparse
 import yaml
 import asyncio
 
-from sirbot import SirBot
+from .core import SirBot
 
 
 def parse_args(arguments):

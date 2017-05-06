@@ -3,15 +3,15 @@ import importlib
 import logging
 import logging.config
 import os
-import aiohttp
-import pluggy
-import yaml
-
-from aiohttp import web
 from collections import defaultdict
 from typing import Optional
 
-from . import hookspecs
+import aiohttp
+import pluggy
+import yaml
+from aiohttp import web
+
+from sirbot.core import hookspecs
 from .facade import MainFacade
 from .utils import merge_dict
 
@@ -103,6 +103,8 @@ class SirBot:
             for plugin in plugins:
                 name = plugin.__name__
                 facade = getattr(plugin, '__facade__', name)
+
+                logger.warning(facade)
 
                 config = self.config.get(name, {})
 

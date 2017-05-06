@@ -1,10 +1,8 @@
-import sirbot
-import asyncio
 import pytest
 
-from sirbot.facade import MainFacade
-from sirbot.errors import FacadeNotAvailable
-
+import sirbot
+from sirbot.core.errors import FacadeNotAvailable
+from sirbot.core.facade import MainFacade
 from tests.test_plugin.sirbot import PluginTest, FacadeTest
 
 config = {

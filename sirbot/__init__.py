@@ -24,8 +24,5 @@ the sirbot api
 #                     /__/     \__\           |_______| \______/      |__|
 
 
-from .core import SirBot  # noqa
-from .plugin import Plugin  # noqa
-from .__meta__ import DATA  # noqa
-
-__version__ = DATA['version']  # noqa
+from sirbot.core import METADATA, SirBot  # noqa
+__version__ = METADATA['version']  # noqa

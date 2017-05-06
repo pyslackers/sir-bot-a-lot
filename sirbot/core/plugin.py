@@ -4,7 +4,6 @@ from abc import ABC
 class Plugin(ABC):  # pragma: no cover
     __version__ = '0.0.1'
     __name__ = 'test'
-    __facade__ = 'test'
 
     def __init__(self, loop):
         """

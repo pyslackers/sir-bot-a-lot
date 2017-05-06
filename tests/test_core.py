@@ -5,15 +5,14 @@ test_sirbot
 
 Tests for `sirbot` module.
 """
-import sirbot
-import pytest
 import logging
-
 from copy import deepcopy
+
+import pytest
 from aiohttp.web import Response
 
-from sirbot.facade import MainFacade
-
+import sirbot
+from sirbot.core.facade import MainFacade
 from tests.test_plugin.sirbot import PluginTest
 
 CONFIG = {
