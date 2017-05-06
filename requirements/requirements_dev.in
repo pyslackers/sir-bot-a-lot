@@ -1,0 +1,11 @@
+tox
+sphinx
+pip-tools
+coverage
+flake8
+pytest-aiohttp
+pytest-asyncio
+pytest-cov
+pytest-runner
+recommonmark
+sphinx-pypi-upload

@@ -21,8 +21,8 @@ Want to join? `Get an invite`_ !
     :alt: Sir-bot-a-lot icon
     :target: http://sir-bot-a-lot.readthedocs.io/en/latest
 
-Instalation
------------
+Installation
+------------
 
 The sources for sir-bot-a-lot can be downloaded from the `github repo`_.
 
@@ -35,6 +35,12 @@ Once you have a copy of the source, you can install it with:
 .. code-block:: console
 
     $ pip install sir-bot-a-lot/
+
+To install the development requirements do:
+
+.. code-block:: console
+
+    $ pip install sir-bot-a-lot/[dev]
 
 Run
 ---

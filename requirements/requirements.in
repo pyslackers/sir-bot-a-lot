@@ -1,0 +1,7 @@
+aiohttp
+async-timeout
+chardet
+multidict
+pluggy
+pyyaml
+yarl
