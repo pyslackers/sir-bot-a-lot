@@ -1,6 +1,6 @@
 import asyncio
 
-from sirbot.utils import ensure_future
+from sirbot.core.utils import ensure_future
 
 
 async def test_ensure_future(loop, capsys):

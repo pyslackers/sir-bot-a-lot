@@ -1,8 +1,6 @@
-import pytest
-import asyncio
 import yaml
 
-from sirbot import cli
+from sirbot.core import cli
 
 CONFIG = {'loglevel': 10,
           'core': {'plugins': ['tests.test_plugin.sirbot'], 'loglevel': 20}}

@@ -12,7 +12,7 @@ if sys.version_info < (3, 5):
 
 
 def load_package_meta():
-    meta_path = convert_path('./sirbot/__meta__.py')
+    meta_path = convert_path('./sirbot/core/__meta__.py')
     meta_ns = {}
     with open(meta_path) as f:
         exec(f.read(), meta_ns)
@@ -20,12 +20,6 @@ def load_package_meta():
 
 
 PKG_META = load_package_meta()
-
-
-requirements = [
-    'Click>=6.0',
-    # TODO: put package requirements here
-]
 
 
 def parse_reqs(req_path='./requirements/requirements.txt'):
@@ -69,14 +63,14 @@ setup(
     ],
     packages=[
         'sirbot',
-        'sirbot.plugins',
+        'sirbot.core',
     ],
     package_dir={
         'sirbot': 'sirbot',
-        'plugins': 'sirbot/plugins',
+        'sirbot.core': 'sirbot/core',
     },
     package_data={
-        'sirbot': ['config.yml']
+        'sirbot.core': ['config.yml']
     },
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and
@@ -91,7 +85,7 @@ setup(
     # installed, specify them here.
     entry_points={
         'console_scripts': [
-            'sirbot=sirbot.cli:main'
+            'sirbot=sirbot.core.cli:main'
         ]
     },
     include_package_data=True,

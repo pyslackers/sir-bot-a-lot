@@ -1,4 +1,4 @@
-from sirbot.errors import SirBotALotError, MessageError
+from sirbot.core.errors import SirBotALotError, MessageError
 
 
 def test_errors():
