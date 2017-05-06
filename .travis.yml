@@ -11,13 +11,13 @@ matrix:
     - python: "nightly"
 
 install:
-  - pip install -r requirements.txt
-  - pip install -r requirements_dev.txt
+  - pip install -r requirements/requirements.txt
+  - pip install -r requirements/requirements_dev.txt
 
 script:
   - python setup.py flake8
   - python setup.py test
-  - sphinx-build -nW -b html -d docs/_build/doctrees docs/ docs/_build/html
+  - python setup.py doc
 
 deploy:
   provider: script
