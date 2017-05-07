@@ -6,18 +6,18 @@ test_sirbot
 Tests for `sirbot` module.
 """
 import logging
+import pytest
+import sirbot
+
+from sirbot.core.facade import MainFacade
+from aiohttp.web import Response
 from copy import deepcopy
 
-import pytest
-from aiohttp.web import Response
-
-import sirbot
-from sirbot.core.facade import MainFacade
-from tests.test_plugin.sirbot import PluginTest
+from tests.core.test_plugin.sirbot import PluginTest
 
 CONFIG = {
     'sirbot': {
-        'plugins': ['tests.test_plugin.sirbot']
+        'plugins': ['tests.core.test_plugin.sirbot']
     },
     'test': {
         'test_config': True
@@ -34,7 +34,7 @@ def test_bot_is_starting(loop, test_server):
 def test_load_config(loop):
     config = {
         'sirbot': {
-            'plugins': ['tests.test_plugin']
+            'plugins': ['tests.core.test_plugin']
         }
     }
     bot = sirbot.SirBot(loop=loop, config=config)
@@ -55,7 +55,7 @@ def test_logging_config(loop):
             }
         },
         'sirbot': {
-            'plugins': ['tests.test_plugin.sirbot']
+            'plugins': ['tests.core.test_plugin.sirbot']
         }
     }
     bot = sirbot.SirBot(loop=loop, config=config)
@@ -66,7 +66,7 @@ def test_logging_config(loop):
 def test_plugin_import(loop, test_server):
     bot = sirbot.SirBot(loop=loop, config=CONFIG)
     loop.run_until_complete(test_server(bot._app))
-    assert bot._pm.has_plugin('tests.test_plugin.sirbot')
+    assert bot._pm.has_plugin('tests.core.test_plugin.sirbot')
 
 
 def test_plugin_import_error(loop):
@@ -97,7 +97,7 @@ def test_start_plugins(loop, test_server):
 
 def test_plugin_task_error(loop, test_server, capsys):
     config = deepcopy(CONFIG)
-    config['sirbot']['plugins'] = ['tests.test_plugin.sirbot_start_error']
+    config['sirbot']['plugins'] = ['tests.core.test_plugin.sirbot_start_error']
     bot = sirbot.SirBot(loop=loop, config=config)
     with pytest.raises(ValueError):
         loop.run_until_complete(test_server(bot._app))
@@ -107,7 +107,7 @@ def test_plugin_priority(loop, test_server):
     config = deepcopy(CONFIG)
     config['test']['priority'] = 80
     config['test-error'] = {'priority': 70}
-    config['sirbot']['plugins'].append('tests.test_plugin.sirbot_start_error')
+    config['sirbot']['plugins'].append('tests.core.test_plugin.sirbot_start_error')
     bot = sirbot.SirBot(loop=loop, config=config)
     assert bot._start_priority[80] == ['test']
     assert bot._start_priority[70] == ['test-error']

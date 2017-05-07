@@ -1,7 +1,6 @@
 import asyncio
 
 from sirbot.core.plugin import Plugin
-
 from sirbot.core.hookimpl import hookimpl
 
 

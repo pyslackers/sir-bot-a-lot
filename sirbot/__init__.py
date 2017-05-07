@@ -25,4 +25,5 @@ the sirbot api
 
 
 from sirbot.core import METADATA, SirBot  # noqa
+
 __version__ = METADATA['version']  # noqa
