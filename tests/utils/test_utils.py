@@ -1,6 +1,6 @@
 import asyncio
 
-from sirbot.core.utils import ensure_future
+from sirbot.utils import ensure_future, merge_dict
 
 
 async def test_ensure_future(loop, capsys):
@@ -27,3 +27,17 @@ async def raise_error(loop):
 async def cancel(loop):
     await asyncio.sleep(0.1, loop=loop)
     raise asyncio.CancelledError
+
+
+def test_merge_dict():
+    a = {"a": 1, "b": [2, 3], "c": {"x": 1, "y": [2, 3], "z": {}}}
+    b_ok = {"a": 1, "b": [2, 3], "c": {"x": 1, "y": [2, 3], "z": {}}}
+    c_ok = {"a": 1, "b": [4, 5], "c": {"x": 1, "y": [2, 3], "z": {}}}
+
+    b = {}
+    b = merge_dict(b, a)
+    assert b == b_ok
+
+    c = {"b": [4, 5], "c": {"x": 1}}
+    c = merge_dict(c, a)
+    assert c == c_ok

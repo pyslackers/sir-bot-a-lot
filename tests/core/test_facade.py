@@ -1,15 +1,16 @@
 import pytest
-
 import sirbot
+
 from sirbot.core.errors import FacadeNotAvailable
 from sirbot.core.facade import MainFacade
-from tests.test_plugin.sirbot import PluginTest, FacadeTest
+
+from tests.core.test_plugin.sirbot import PluginTest, FacadeTest
 
 config = {
     'loglevel': 10,
     'sirbot': {
         'loglevel': 20,
-        'plugins': ['tests.test_plugin.sirbot']
+        'plugins': ['tests.core.test_plugin.sirbot']
     }
 }
 
