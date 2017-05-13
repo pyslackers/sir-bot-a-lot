@@ -52,8 +52,6 @@ A basic configuration will look like this:
 
 .. code-block:: yaml
 
-.. code-block:: yaml
-
     sirbot:
         port: 8080
         plugins: []
