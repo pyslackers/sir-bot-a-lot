@@ -43,7 +43,7 @@ The default configuration file look like this:
 .. code-block:: yaml
 
     sirbot:
-    port: 8080
-    plugins: []
+        port: 8080
+        plugins: []
     
-Plugins can also be added with the `--plugins` argument
+Plugins can also be added with the :code:`--plugins` argument

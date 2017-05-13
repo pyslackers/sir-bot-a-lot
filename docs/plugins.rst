@@ -31,10 +31,10 @@ Sir Bot-a-lot is build onto the `pluggy`_ library for plugin management.
 
 A plugin must define one hook returning a subclass of the plugin class.
 
-.. literalinclude:: ../sirbot/hookspecs.py
+.. literalinclude:: ../sirbot/core/hookspecs.py
 
 
-.. literalinclude:: ../sirbot/plugin.py
+.. literalinclude:: ../sirbot/core/plugin.py
 
 
 Facade
@@ -52,7 +52,7 @@ It can be retrieve inside another plugin with:
 
 .. code-block:: python
     
-    # Create a new giphy facade by calling 
+    # Create a new pypi facade by calling
     # PyPIPlugin.facade()
     pypi = facades.get('pypi')
     
