@@ -4,10 +4,10 @@
    contain the root `toctree` directive.
 
 =========================================
-Welcome to sir-bot-a-lot's documentation!
+Welcome to Sir Bot-a-lot's documentation!
 =========================================
 
-A slack bot built for the people and by the people of the `python developers slack community`_.
+An asynchronous bot framework built for the people and by the people of the `python developers slack community`_.
 Want to join? `Get an invite`_ !
 
 .. toctree::
@@ -15,7 +15,7 @@ Want to join? `Get an invite`_ !
 
    quickstart
    installation
-   usage
+   configuration
    plugins
    facade
    contributing

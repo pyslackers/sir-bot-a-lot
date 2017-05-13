@@ -6,9 +6,12 @@ Contributing
 
 First off, thanks for taking the time to contribute!
 
-Contributions are welcome by anybody and everybody. We are not kidding!
+Contributions are welcome by anybody and everybody. We are not kidding! Looking for help ? Join us on `Slack`_ by requesting an `invite`_.
 
 The rest of this document will be guidelines to contributing to the project. Remember that these are just guidelines, not rules. Use common sense as much as possible.
+
+.. _invite: http://pythondevelopers.herokuapp.com/
+.. _Slack: https://pythondev.slack.com/
 
 Pull Request Guidelines
 -----------------------
@@ -31,7 +34,7 @@ Types of Contributions
 Report Bugs
 ^^^^^^^^^^^
 
-Report bugs at https://gitlab.com/PythonDevCommunity/sir-bot-a-lot/issues.
+Report bugs at https://github.com/pyslackers/sir-bot-a-lot/issues.
 
 If you are reporting a bug, please include:
 
@@ -42,26 +45,21 @@ If you are reporting a bug, please include:
 Bugs & Features
 ^^^^^^^^^^^^^^^
 
-Look through the gitlab issues for bugs or features request.
-Anything tagged with "bug" or "enhancement" is open to whoever wants to implement it.
+Look through the github issues for bugs or features request.
+Anything tagged with "help-wanted" is open to whoever wants to implement it.
 
-At this point you might want to pop on the #bots and #community-projects channel of the `python developers slack community`_.
-Request an `invite`_.
-
-.. _invite: http://pythondevelopers.herokuapp.com/
-.. _python developers slack community: https://pythondev.slack.com/
 
 Write Documentation
 ^^^^^^^^^^^^^^^^^^^
 
-sir-bot-a-lot could always use more documentation, whether as part of the
-official sir-bot-a-lot docs, in docstrings, or even on the web in blog posts,
+Sir Bot-a-lot could always use more documentation, whether as part of the
+official Sir Bot-a-lot docs, in docstrings, or even on the web in blog posts,
 articles, and such.
 
 Submit Feedback
 ^^^^^^^^^^^^^^^
 
-The best way to send feedback is to file an issue at https://gitlab.com/PythonDevCommunity/sir-bot-a-lot/issues.
+The best way to send feedback is to file an issue at https://github.com/pyslackers/sir-bot-a-lot/issues.
 
 If you are proposing a feature:
 
@@ -75,12 +73,12 @@ Get Started!
 
 Ready to contribute? Here's how to set up `sir-bot-a-lot` for local development.
 
-1. Fork the `sir-bot-a-lot` repo on gitlab.
+1. Fork the `sir-bot-a-lot` repo on github.
 2. Clone your fork locally:
 
    .. code-block:: console
 
-       $ git clone git@gitlab.com:your_name_here/sir-bot-a-lot.git
+       $ git clone git@github.com:<username>/sir-bot-a-lot.git
 
 3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development:
 
@@ -106,7 +104,7 @@ Ready to contribute? Here's how to set up `sir-bot-a-lot` for local development.
 
    To get tox, just pip install it into your virtualenv.
 
-6. Commit your changes and push your branch to gitlab:
+6. Commit your changes and push your branch to github:
 
 .. code-block:: console
 
@@ -114,7 +112,7 @@ Ready to contribute? Here's how to set up `sir-bot-a-lot` for local development.
        $ git commit -m "Your detailed description of your changes."
        $ git push origin name-of-your-bugfix-or-feature
 
-7. Submit a pull request through the gitlab website.
+7. Submit a pull request through the github website.
 
 Git Hygiene
 -----------
