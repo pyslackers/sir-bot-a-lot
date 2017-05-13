@@ -1,11 +1,11 @@
-=====================
-Usage & Configuration
-=====================
+=============
+Configuration
+=============
 
 Command Line
 ------------
 
-To start Sir-bot-a-lot you can use:
+To start Sir Bot-a-lot you can use:
 
 .. code-block:: console
 
@@ -18,15 +18,16 @@ or:
     $ python run.py
 
 
-
 Arguments
 ^^^^^^^^^
 
 The command line arguments take precedence over the configuration file.
 
 * :code:`-h --help`: Help message
-* :code:`-p --port`: Port where to run Sir-bot-a-lot
-* :code:`-c --config`: Path to Sir-bot-a-lot Yaml config file
+* :code:`-P --port`: Port where to run Sir Bot-a-lot
+* :code:`-c --config`: Path to Sir Bot-a-lot Yaml config file
+* :code:`-u --update`: Perform update migration if necessary (i.e. database)
+* :code:`-p --plugins`: Plugins to start
 
 
 Environment variables
@@ -34,14 +35,14 @@ Environment variables
 The environment variable take precedence over the command line arguments and the
 configuration file.
 
-* :code:`SIRBOT_PORT`: Port where to run Sir-bot-a-lot
-* :code:`SIRBOT_CONFIG`: Path to Sir-bot-a-lot Yaml config file
+* :code:`SIRBOT_PORT`: Port where to run Sir Bot-a-lot
+* :code:`SIRBOT_CONFIG`: Path to Sir Bot-a-lot Yaml config file
 
 
 Configuration file
 ------------------
 
-Sir-bot-a-lot configuration is a Yaml file containing the core and all the
+Sir Bot-a-lot configuration is a Yaml file containing the core and all the additional
 plugins configuration.
 
 The environment variable and command line arguments take precedence over the
@@ -51,41 +52,37 @@ A basic configuration will look like this:
 
 .. code-block:: yaml
 
-    port: 8080
+.. code-block:: yaml
 
-    core:
-      plugins:
-      - plugin-1
-      - plugin-2
-
-    plugin-1:
+    sirbot:
+        port: 8080
+        plugins: []
+    plugin1:
         ...
-
-    plugin-2:
+    plugin2:
         ...
 
 Starting priority
 ^^^^^^^^^^^^^^^^^
 
-As plugins can depend on other plugins startup is done by priority. By default all plugins have a priority of 50.
-Plugins with a higher priority will start before the one with a lower priority.
+Plugins can be dependant on other plugins. You can ensure a startup order by setting a startup priority. By default all plugins have a priority of 50. Plugins with a higher priority will start before the one with a lower priority.
 
-If multiple plugins have the same priority they will start at the same time.
+If multiple plugins have the same priority they will start simultaneously.
 
 The priority can be set to false to disable a plugin.
 
 .. code-block:: yaml
 
-    plugin-1:
+    plugin1:
         priority: 80
-    plugin-2:
+    plugin2:
         priority: False
 
 Logging
 ^^^^^^^
 
 Logging can be configured in the :code:`logging` key of the configuration file.
-It use the logging module `dictionnary configuration`_.
+It use the logging module `dictionnary configuration`_. By default the log level is set to :code:`INFO`.
 
 Each plugin should define his own logger. The core logger is :code:`sirbot.core`.
 

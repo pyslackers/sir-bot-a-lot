@@ -2,13 +2,12 @@
 Facade
 ======
 
-The MainFacade object is the way to access other plugin functionality.
-Each plugin should expose a facade.
-
-To request a plugin facade:
+The facade manager is the way to access other plugin functionality by requesting a plugin facade:
 
 .. code-block:: python
 
-    plugin_facade = main_facade.get('my_plugin')
+    plugin_facade = facade.get('my_plugin')
 
-A new plugin facade is created for each called to the :code:`MainFacade.get` method
+A new plugin facade is created for each call to the :code:`Facade.get` method
+
+Each incoming request should create a new facade manager object by calling :code:`facade.new()`
