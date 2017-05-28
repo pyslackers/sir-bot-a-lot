@@ -85,7 +85,8 @@ def test_initialize_plugins(loop):
 
 def test_plugin_configure(loop, test_server):
     bot = sirbot.SirBot(loop=loop, config=CONFIG)
-    loop.run_until_complete(test_server(bot._app))
+    loop.run_until_complete(bot._configure_plugins())
+
     assert bot._plugins['test']['plugin'].config == CONFIG['test']
 
 
