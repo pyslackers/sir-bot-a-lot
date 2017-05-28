@@ -47,8 +47,6 @@ class SirBot:
         self._initialize_plugins()
         self._registering_facades()
 
-        self._loop.run_until_complete(self._configure_plugins())
-
         logger.info('Sir-bot-a-lot Initialized')
 
     def _configure(self) -> None:
@@ -215,4 +213,5 @@ class SirBot:
         """
         Start the bot
         """
+        self._loop.run_until_complete(self._configure_plugins())
         web.run_app(self._app, host=host, port=port)  # pragma: no cover
