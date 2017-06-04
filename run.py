@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from sirbot import main
+from sirbot.core.cli import main
 
 if __name__ == '__main__':
     main()
