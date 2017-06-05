@@ -2,31 +2,38 @@ from abc import ABC
 
 
 class Plugin(ABC):  # pragma: no cover
+    """
+    Plugin for sirbot
+
+    The loop should be explicitly passed in the plugin
+
+    Args:
+        loop (asyncio.AbstractEventLoop): Event loop
+    """
+
+    #: Current version of the plugin
     __version__ = '0.0.1'
+
+    #: Name of the plugin
     __name__ = 'test'
 
+    #: Name of the facade
+    __facade__ = 'test'
+
     def __init__(self, loop):
-        """
-        Method called at the bot initialization.
-
-
-        Nothing big should be executed by a plugin at this point.
-        Please explicitly pass the loop in the plugin.
-
-        :param loop: asyncio loop
-        """
+        pass
 
     async def configure(self, config, router, session, facades):
         """
         Method called after the initialization of all plugins
 
-
-
-        :param config: configuration for this plugin
-        :param router: aiohttp UrlDispatcher
-        :param session: aiohttp client session
-        :param facades: facades of all available plugins
-        :return: None
+        Args:
+            config (dict): configuration for this plugin
+            router (aiohttp.web_urldispatcher.UrlDispatcher): incoming request
+                router
+            session (aiohttp.ClientSession): Session
+            facades (sirbot.core.facade.MainFacade): facades of all available
+                plugins
         """
         pass
 
@@ -34,10 +41,10 @@ class Plugin(ABC):  # pragma: no cover
         """
         Method called at the bot startup
 
+        Plugins with a higher priority will be started first
+
         Stored as an asyncio tasks. Is kept running while the bot is alive.
         All incoming data (if any) should be processed here.
-
-        :return: None
         """
         pass
 
@@ -46,16 +53,15 @@ class Plugin(ABC):  # pragma: no cover
         """
         Plugins successfully started
 
-        This property should be set as True when the plugin is fully started.
+        This property should be set as :code:`True`
+        when the plugin is fully started.
         """
         return False
 
-    # def facade(self):
-    #     """
-    #     OPTIONAL Method called when a plugin request the facade of this
-    #     plugin
-    #
-    #     Should return a class for interacting with the service API
-    #
-    #     :return: None
-    #     """
+    def facade(self):
+        """
+        Facade factory
+
+        Used by the :meth:`sirbot.core.facade.MainFacade.get` method
+        """
+        return False

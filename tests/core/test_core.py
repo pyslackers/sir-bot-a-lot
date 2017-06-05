@@ -120,16 +120,3 @@ def test_plugin_no_start(loop, test_server):
     bot = sirbot.SirBot(loop=loop, config=config)
     assert bot._start_priority == {}
     assert bot._plugins == {}
-
-def test_middleware(loop, test_client):
-
-    async def handler(request):
-        assert isinstance(request['facades'], MainFacade)
-        return Response(text='test')
-
-    bot = sirbot.SirBot(loop=loop, config=CONFIG)
-    bot._app.router.add_route('GET', '/', handler)
-    server = loop.run_until_complete(test_client(bot._app))
-    rep = loop.run_until_complete(server.get('/'))
-    assert 200 == rep.status
-    assert 'test' == (loop.run_until_complete(rep.text()))

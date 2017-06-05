@@ -1,38 +1,46 @@
-from .errors import FacadeNotAvailable
+from .errors import FacadeUnavailable
 
 
 class MainFacade:
     """
-    A class to compose all available functionality available to a bot
-    or other plugin.
+    Class to compose all available facade.
 
-    Regroup all the facades of the plugins
+    Args:
+        facades (dict): Facade name and the associated factory
     """
     def __init__(self, facades):
         self._facades = facades
 
-    def get(self, plugin: str):
+    def get(self, facade: str):
         """
         Search for the plugin facade and initialize it
 
+        Args:
+            facade (str): facade name
 
-        :param plugin: Facade to initialize
-        :return: Plugin facade or None
-        :raise: FacadeNotAvailable
+        Returns:
+            Facade object return by :meth:`sirbot.core.plugin.Plugin.facade()`
+
+        Raises:
+            sirbot.core.errors.FacadeUnavailable: The facade does not exist or
+             the plugin has not started yet
+
         """
-        facade = self._facades.get(plugin)
-        if facade:
-            return facade()
-        raise FacadeNotAvailable(plugin)
+        factory = self._facades.get(facade)
+        if factory:
+            return factory()
+        raise FacadeUnavailable(facade)
 
     def new(self):
         """
-        Return a new instance of the MainFacade
+        Return a new instance of the :class:`sirbot.core.facade.MainFacade`
 
-        Should be called by plugins to have a new facade for each incoming
-        message
+        A new :class:`sirbot.core.facade.MainFacade`
+        should be created for all incoming event.
 
-        :return: MainFacade
+        Returns:
+            MainFacade: A new instance of
+                :class:`sirbot.core.facade.MainFacade`
         """
         return MainFacade(self._facades)
 

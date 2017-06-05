@@ -9,3 +9,6 @@ pytest-cov
 pytest-runner
 recommonmark
 sphinx-pypi-upload
+sphinxcontrib-asyncio
+sphinxcontrib-asyncio
+sphinxcontrib-napoleon

@@ -22,6 +22,7 @@ mccabe==0.6.1             # via flake8
 multidict==2.1.4          # via aiohttp, yarl
 pip-tools==1.9.0
 pluggy==0.4.0             # via tox
+pockets==0.5.1            # via sphinxcontrib-napoleon
 py==1.4.33                # via pytest, tox
 pycodestyle==2.3.1        # via flake8
 pyflakes==1.5.0           # via flake8
@@ -34,10 +35,12 @@ pytest==3.0.7             # via pytest-aiohttp, pytest-asyncio, pytest-cov
 pytz==2017.2              # via babel
 recommonmark==0.4.0
 requests==2.13.0          # via sphinx
-six==1.10.0               # via pip-tools, sphinx
+six==1.10.0               # via pip-tools, pockets, sphinx, sphinxcontrib-napoleon
 snowballstemmer==1.2.1    # via sphinx
 sphinx-pypi-upload==0.2.1
 sphinx==1.5.5
+sphinxcontrib-asyncio==0.2.0
+sphinxcontrib-napoleon==0.6.1
 tox==2.7.0
 virtualenv==15.1.0        # via tox
 yarl==0.10.1              # via aiohttp
