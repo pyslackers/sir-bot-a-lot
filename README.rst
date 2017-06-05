@@ -57,6 +57,21 @@ Check out the `available plugins`_.
 .. _github repo: https://github.com/pyslackers/sir-bot-a-lot
 .. _available plugins: http://sir-bot-a-lot.readthedocs.io/en/latest/plugins.html#available-plugins
 
+Docker
+------
+
+Build the image:
+
+.. code-block:: console
+
+    $ docker build -t sir-bot-a-lot .
+
+And run the image:
+
+.. code-block:: console
+
+    $ docker run -ti -p "8080:8080" sir-bot-a-lot
+
 Configuration
 -------------
 
