@@ -11,14 +11,14 @@ class Plugin(ABC):  # pragma: no cover
         loop (asyncio.AbstractEventLoop): Event loop
     """
 
-    #: Current version of the plugin
     __version__ = '0.0.1'
+    """Current version of the plugin"""
 
-    #: Name of the plugin
     __name__ = 'test'
+    """Name of the plugin"""
 
-    #: Name of the facade
     __facade__ = 'test'
+    """Name of the facade"""
 
     def __init__(self, loop):
         pass
@@ -45,6 +45,18 @@ class Plugin(ABC):  # pragma: no cover
 
         Stored as an asyncio tasks. Is kept running while the bot is alive.
         All incoming data (if any) should be processed here.
+        """
+        pass
+
+    async def update(self, config, plugins):
+        """
+        Method called by :meth:`sirbot.core.SirBot.update`
+
+        Perform any update to the plugin configuration here.
+
+        Args:
+            config (dict): configuration for this plugin
+            plugins (dict[name, plugin]): initialized plugins
         """
         pass
 

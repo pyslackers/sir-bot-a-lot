@@ -13,7 +13,8 @@ class MainFacade:
 
     def get(self, facade: str):
         """
-        Search for the plugin facade and initialize it
+        Search for a matching :attr:`sirbot.core.plugin.Plugin.__facade__`
+        and initialize it
 
         Args:
             facade (str): facade name
