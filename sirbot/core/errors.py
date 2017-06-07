@@ -1,19 +1,17 @@
-class SirBotALotError(Exception):
+class SirBotError(Exception):
     """
-    Generic Sir-bot-a-lot error
-    """
-
-
-class MessageError(SirBotALotError):
-    """
-    Generic message error
+    Top level sirbot error
     """
 
 
-class FacadeNotAvailable(SirBotALotError):
+class FacadeUnavailable(SirBotError):
     """
-    Error when the requested facade is not available
-    """
+    The facade does not exist or the plugin has not started yet
 
-    def __init__(self, facade=''):
+    Args:
+        facade: Name of the unavailable facade
+    """
+    def __init__(self, facade):
+
+        #: Name of the unavailable facade
         self.facade = facade

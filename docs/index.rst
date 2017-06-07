@@ -18,6 +18,7 @@ Want to join? `Get an invite`_ !
    configuration
    plugins
    facade
+   references
    contributing
    history
    authors

@@ -1,7 +1,7 @@
 import pytest
 import sirbot
 
-from sirbot.core.errors import FacadeNotAvailable
+from sirbot.core.errors import FacadeUnavailable
 from sirbot.core.facade import MainFacade
 
 from tests.core.test_plugin.sirbot import PluginTest, FacadeTest
@@ -40,7 +40,7 @@ def test_get_facade(loop):
     facade = MainFacade(bot._facades)
     f = facade.get('test')
     assert isinstance(f, FacadeTest)
-    with pytest.raises(FacadeNotAvailable) as error:
+    with pytest.raises(FacadeUnavailable) as error:
         facade.get('foo')
 
     assert error.value.facade == 'foo'

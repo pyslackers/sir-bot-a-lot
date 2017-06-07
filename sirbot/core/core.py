@@ -1,3 +1,9 @@
+"""
+sirbot core
+
+Core API of Sir-bot-a-lot
+"""
+
 import asyncio
 import importlib
 import logging
@@ -8,7 +14,6 @@ import pluggy
 import yaml
 
 from collections import defaultdict
-from typing import Optional
 from aiohttp import web
 
 from sirbot.utils import merge_dict
@@ -20,11 +25,16 @@ logger = logging.getLogger(__name__)
 
 
 class SirBot:
-    def __init__(self, config=None, debug=False, *,
-                 loop: Optional[asyncio.AbstractEventLoop] = None):
+    """
+    Initialize sirbot and load plugins. Core and logging configuration is
+    done on initialization. Plugins configuration is done on startup.
 
+    Args:
+        config (dict): Configuration of Sir-bot-a-lot
+        loop (asyncio.AbstractEventLoop): Event loop
+    """
+    def __init__(self, config=None, *, loop=None):
         self.config = config or {}
-        self._debug = debug
         self._configure()
         logger.info('Initializing Sir-bot-a-lot')
 
@@ -39,8 +49,7 @@ class SirBot:
         self._facades = dict()
 
         self._import_plugins()
-        self._app = web.Application(loop=self._loop,
-                                    middlewares=(self._middleware_factory,))
+        self._app = web.Application(loop=self._loop)
         self._app.on_startup.append(self._start)
         self._app.on_cleanup.append(self._stop)
 
@@ -49,13 +58,13 @@ class SirBot:
 
         logger.info('Sir-bot-a-lot Initialized')
 
-    def _configure(self) -> None:
+    def _configure(self):
         """
-        Configure Sirbot
+        Configure the core of sirbot
 
-        :return: None
+        Merge the config with the default core config and configure logging.
+        The default logging level is `INFO`
         """
-
         path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), 'config.yml'
         )
@@ -72,7 +81,7 @@ class SirBot:
 
     async def _start(self, app: web.Application) -> None:
         """
-        Startup tasks
+        Start sirbot
         """
         logger.info('Starting Sir-bot-a-lot ...')
         await self._start_plugins()
@@ -81,7 +90,7 @@ class SirBot:
 
     async def _stop(self, app) -> None:
         """
-        Stoppping tasks
+        Stop sirbot
         """
         logger.info('Stopping Sir-bot-a-lot ...')
 
@@ -92,9 +101,26 @@ class SirBot:
 
         logger.info('Sir-bot-a-lot fully stopped')
 
-    def _initialize_plugins(self) -> None:
+    def _import_plugins(self) -> None:
         """
-        Initialize and start the plugins
+        Import and register plugin in the plugin manager.
+
+        The pluggy library is used as plugin manager.
+        """
+        logger.debug('Importing plugins')
+        self._pm = pluggy.PluginManager('sirbot')
+        self._pm.add_hookspecs(hookspecs)
+
+        for plugin in self.config['sirbot']['plugins']:
+            p = importlib.import_module(plugin)
+            self._pm.register(p)
+
+    def _initialize_plugins(self):
+        """
+        Initialize the plugins
+
+        Query the configuration and the plugins for info
+        (name, facade name, start priority, etc)
         """
         logger.debug('Initializing plugins')
         plugins = self._pm.hook.plugins(loop=self._loop)
@@ -105,6 +131,7 @@ class SirBot:
                 config = self.config.get(name, {})
 
                 priority = config.get('priority', 50)
+
                 if priority:
                     self._plugins[name] = {
                         'plugin': plugin,
@@ -117,8 +144,12 @@ class SirBot:
         else:
             logger.error('No plugins found')
 
-    def _registering_facades(self) -> None:
+    def _registering_facades(self):
+        """
+        Index the available facades
 
+        Query the plugins for an usable facade and register it
+        """
         for name, info in self._plugins.items():
             if info['priority']:
                 plugin_facade = getattr(info['plugin'], 'facade', None)
@@ -126,8 +157,14 @@ class SirBot:
                     self._facades[info['facade']] = info['plugin'].facade
 
     async def _configure_plugins(self) -> None:
-        logger.debug('Configuring plugins')
+        """
+        Configure the plugins
 
+        Asynchronously configure the plugins.
+        Each plugins get a MainFacade object to check the available facades.
+        Facade can not be loaded as the bot hasn't started yet.
+        """
+        logger.debug('Configuring plugins')
         funcs = [
             info['plugin'].configure(
                 config=info['config'],
@@ -143,6 +180,13 @@ class SirBot:
         logger.debug('Plugins configured')
 
     async def _start_plugins(self) -> None:
+        """
+        Start the plugins by priority
+
+        Start the plugins based on the priority and wait for them to be fully
+        started before starting the next one. This ensure that the facade of
+        previously started plugin is usable.
+        """
         logger.debug('Starting plugins')
         for priority in sorted(self._start_priority, reverse=True):
             logger.debug(
@@ -168,33 +212,13 @@ class SirBot:
                 logger.debug('Plugins %s started',
                              ', '.join(self._start_priority[priority]))
 
-    def _import_plugins(self) -> None:
-        """
-        Import and register the plugins
-
-        Most likely composed of a client and a dispatcher
-        """
-        logger.debug('Importing plugins')
-        self._pm = pluggy.PluginManager('sirbot')
-        self._pm.add_hookspecs(hookspecs)
-
-        for plugin in self.config['sirbot']['plugins']:
-            p = importlib.import_module(plugin)
-            self._pm.register(p)
-
-    async def _middleware_factory(self, app, handler):
-        async def middleware_handler(request):
-            request['facades'] = MainFacade(self._facades)
-            try:
-                return await handler(request)
-            except aiohttp.web.HTTPNotFound:
-                pass
-            except Exception as e:
-                logger.exception(e)
-
-        return middleware_handler
-
     async def update(self):
+        """
+        Update sirbot
+
+        Trigger the update method of the plugins. This is needed if the plugins
+        need to perform update migration (i.e database)
+        """
         for name, plugin in self._plugins.items():
             plugin_update = getattr(plugin['plugin'], 'update', None)
             if callable(plugin_update):
@@ -205,13 +229,21 @@ class SirBot:
     @property
     def app(self) -> web.Application:
         """
-        Return the composed aiohttp application
+
+        Returns: The composed aiohttp.web.Application
+
         """
         return self._app
 
     def run(self, host: str = '0.0.0.0', port: int = 8080):
         """
-        Start the bot
+        Start sirbot
+
+        Configure sirbot and start the aiohttp.web.Application
+
+        Args:
+            host (str): host
+            port (int): port
         """
         self._loop.run_until_complete(self._configure_plugins())
         web.run_app(self._app, host=host, port=port)  # pragma: no cover

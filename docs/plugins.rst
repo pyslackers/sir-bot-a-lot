@@ -25,36 +25,30 @@ Writing plugins
 ---------------
 
 Sir Bot-a-lot is build onto the `pluggy`_ library for plugin management.
+A :ref:`references_plugin` must define one :ref:`references_hook` returning a subclass of the plugin class.
 
 .. _pluggy: https://github.com/pytest-dev/pluggy
-
-
-A plugin must define one hook returning a subclass of the plugin class.
-
-.. literalinclude:: ../sirbot/core/hookspecs.py
-
-
-.. literalinclude:: ../sirbot/core/plugin.py
 
 
 Facade
 ^^^^^^
 
-If needed a plugin can expose a facade to Sir Bot-a-lot allowing other plugins access to its functionality.
+If needed a plugin can expose a :ref:`facade` to Sir Bot-a-lot allowing other plugins access to its functionality.
 
-A new facade instance is created each time a plugin request it.
+A new facade instance is created each time a plugin request one.
 
 Example
 ^^^^^^^
 
 The `pypi`_ plugin provide a simple facade for the `Python Package Index`_ API.
+
 It can be retrieve inside another plugin with:
 
 .. code-block:: python
     
     # Create a new pypi facade by calling
     # PyPIPlugin.facade()
-    pypi = facades.get('pypi')
+    pypi = MainFacades.get('pypi')
     
     # The pypi plugin facade only expose the search function
     result = await pypi.search('sir-bot-a-lot')
