@@ -29,8 +29,11 @@ Plugin
 .. autoclass:: sirbot.core.plugin.Plugin
    :members:
 
-.. _references_hook:
+   .. autoattribute:: sirbot.core.plugin.Plugin.__name__
+   .. autoattribute:: sirbot.core.plugin.Plugin.__version__
+   .. autoattribute:: sirbot.core.plugin.Plugin.__facade__
 
+.. _references_hook:
 
 Hook
 ----
