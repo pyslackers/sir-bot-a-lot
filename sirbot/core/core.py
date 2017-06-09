@@ -127,7 +127,7 @@ class SirBot:
         if plugins:
             for plugin in plugins:
                 name = plugin.__name__
-                facade = getattr(plugin, '__facade__', name)
+                facade = plugin.__facade__ or plugin.__name__
                 config = self.config.get(name, {})
 
                 priority = config.get('priority', 50)
