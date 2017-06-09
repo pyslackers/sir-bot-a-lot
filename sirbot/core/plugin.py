@@ -14,10 +14,10 @@ class Plugin(ABC):  # pragma: no cover
     __version__ = '0.0.1'
     """Current version of the plugin"""
 
-    __name__ = 'test'
+    __name__ = 'plugin'
     """Name of the plugin"""
 
-    __facade__ = 'test'
+    __facade__ = ''
     """Name of the facade"""
 
     def __init__(self, loop):
