@@ -20,6 +20,8 @@ def parse_args(arguments):
                         action='store_true', dest='update')
     parser.add_argument('-p', '--plugins', help='Plugins to load',
                         dest='plugins', nargs='+')
+    parser.add_argument('--example', help='Load the specified examples',
+                        dest='example', nargs=1)
 
     return parser.parse_args(arguments)
 
@@ -54,7 +56,14 @@ def main():  # pragma: no cover
     args = parse_args(sys.argv[1:])
     logging.basicConfig()
 
-    config_file = args.config or os.getenv('SIRBOT_CONFIG')
+    if args.example:
+        config_file = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            '..', 'examples', args.example[0] , 'config.yml'
+        )
+    else:
+        config_file = args.config or os.getenv('SIRBOT_CONFIG')
+
     config = load_config(config_file)
     config = cli_plugin(args, config)
 

@@ -63,15 +63,20 @@ setup(
     packages=[
         'sirbot',
         'sirbot.core',
-        'sirbot.utils'
+        'sirbot.utils',
+        'sirbot.examples',
+        'sirbot.examples.plugin'
     ],
     package_dir={
         'sirbot': 'sirbot',
         'sirbot.core': 'sirbot/core',
-        'sirbot.utils': 'sirbot/utils'
+        'sirbot.utils': 'sirbot/utils',
+        'sirbot.examples': 'examples',
+        'sirbot.examples.plugin': 'examples/plugin'
     },
     package_data={
-        'sirbot.core': ['config.yml']
+        'sirbot.core': ['config.yml'],
+        'sirbot.examples.plugin': ['config.yml', 'README.rst']
     },
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and
