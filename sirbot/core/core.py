@@ -225,6 +225,7 @@ class SirBot:
                 logger.info('Updating %s', name)
                 await plugin_update(self.config.get(name, {}), self._plugins)
                 logger.info('%s updated', name)
+        self._session.close()
 
     @property
     def app(self) -> web.Application:
