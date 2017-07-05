@@ -7,7 +7,14 @@
 Welcome to Sir Bot-a-lot's documentation!
 =========================================
 
-An asynchronous bot framework built for the people and by the people of the `python developers slack community`_.
+An asynchronous python bot framework.
+
+The uses of bots are nearly endless and come in all shapes and sizes.
+They can handle Slack shenanigans, monitor the status of a crypto-currency,
+or become your personal assistant. Sir-bot-a-lot can help you get started
+writing your own.
+
+Sir-bot-a-lot is a project maintained by the `pyslackers`_ community.
 Want to join? `Get an invite`_ !
 
 .. toctree::
@@ -24,5 +31,5 @@ Want to join? `Get an invite`_ !
    authors
    license
 
-.. _Get an invite: http://pythondevelopers.herokuapp.com/
-.. _python developers slack community: https://pythondev.slack.com/
+.. _pyslackers: http://pyslackers.com
+.. _Get an invite: http://pyslackers.com

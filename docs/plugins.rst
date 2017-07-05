@@ -4,7 +4,7 @@
 Plugins
 =======
 
-.. _available_plugins:
+.. _available plugins:
 
 Available plugins
 -----------------
@@ -43,4 +43,6 @@ A new facade instance is created each time a plugin request one.
 Example
 ^^^^^^^
 
-For example plugins take a look at the example folder in the github repository.
+For example plugins take a look at the `example folder`_ in the github repository.
+
+.. _example folder: https://github.com/pyslackers/sir-bot-a-lot/tree/master/examples/plugin
