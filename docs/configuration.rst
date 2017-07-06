@@ -55,6 +55,11 @@ A basic configuration will look like this:
     plugin2:
         ...
 
+Plugins must be importable python modules defining the :ref:`references_hook`.
+See :ref:`writing_plugins` for more information.
+
+.. _conf_starting_priority:
+
 Starting priority
 ^^^^^^^^^^^^^^^^^
 
@@ -71,13 +76,14 @@ A priority of 0 or false will disable the plugin.
     plugin1:
         priority: 80
     plugin2:
-        priority: False
+        priority: false
 
 Logging
 ^^^^^^^
 
 Logging can be configured in the :code:`logging` key of the configuration file.
-It use the logging module `dictionnary configuration`_. By default the log level is set to :code:`INFO`.
+It use the logging module `dictionnary configuration`_. By default the log
+level is set to :code:`INFO`.
 
 Each plugin should define his own logger. The core logger is :code:`sirbot.core`.
 

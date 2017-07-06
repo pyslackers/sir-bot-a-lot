@@ -19,7 +19,7 @@ from aiohttp import web
 from sirbot.utils import merge_dict
 
 from . import hookspecs
-from .facade import MainFacade
+from .registry import Registry
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class SirBot:
         self._plugins = dict()
 
         self._start_priority = defaultdict(list)
-        self._facades = dict()
+        self._registry = Registry()
 
         self._import_plugins()
         self._app = web.Application(loop=self._loop)
@@ -54,7 +54,7 @@ class SirBot:
         self._app.on_cleanup.append(self._stop)
 
         self._initialize_plugins()
-        self._registering_facades()
+        self._register_factory()
 
         logger.info('Sir-bot-a-lot Initialized')
 
@@ -120,14 +120,14 @@ class SirBot:
         Initialize the plugins
 
         Query the configuration and the plugins for info
-        (name, facade name, start priority, etc)
+        (name, registry name, start priority, etc)
         """
         logger.debug('Initializing plugins')
         plugins = self._pm.hook.plugins(loop=self._loop)
         if plugins:
             for plugin in plugins:
                 name = plugin.__name__
-                facade = plugin.__facade__ or plugin.__name__
+                registry_name = plugin.__registry__ or plugin.__name__
                 config = self.config.get(name, {})
 
                 priority = config.get('priority', 50)
@@ -137,39 +137,39 @@ class SirBot:
                         'plugin': plugin,
                         'config': config,
                         'priority': priority,
-                        'facade': facade
+                        'factory': registry_name
                     }
 
                     self._start_priority[priority].append(name)
         else:
             logger.error('No plugins found')
 
-    def _registering_facades(self):
+    def _register_factory(self):
         """
-        Index the available facades
+        Index the available factories
 
-        Query the plugins for an usable facade and register it
+        Query the plugins for an usable factory and register it
         """
         for name, info in self._plugins.items():
             if info['priority']:
-                plugin_facade = getattr(info['plugin'], 'facade', None)
-                if callable(plugin_facade):
-                    self._facades[info['facade']] = info['plugin'].facade
+                factory = getattr(info['plugin'], 'factory', None)
+                if callable(factory):
+                    self._registry[info['factory']] = info['plugin'].factory
+        self._registry.freeze()
 
     async def _configure_plugins(self) -> None:
         """
         Configure the plugins
 
-        Asynchronously configure the plugins.
-        Each plugins get a MainFacade object to check the available facades.
-        Facade can not be loaded as the bot hasn't started yet.
+        Asynchronously configure the plugins. Pass them their configuration,
+        the aiohttp session, the registry and the aiohttp router
         """
         logger.debug('Configuring plugins')
         funcs = [
             info['plugin'].configure(
                 config=info['config'],
                 session=self._session,
-                facades=MainFacade(self._facades),
+                registry=self._registry,
                 router=self.app.router
             )
             for info in self._plugins.values()
@@ -184,8 +184,8 @@ class SirBot:
         Start the plugins by priority
 
         Start the plugins based on the priority and wait for them to be fully
-        started before starting the next one. This ensure that the facade of
-        previously started plugin is usable.
+        started before starting the next one. This ensure plugins can use
+        a previously started one during startup.
         """
         logger.debug('Starting plugins')
         for priority in sorted(self._start_priority, reverse=True):

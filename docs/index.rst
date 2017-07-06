@@ -11,20 +11,28 @@ An asynchronous python bot framework.
 
 The uses of bots are nearly endless and come in all shapes and sizes.
 They can handle Slack shenanigans, monitor the status of a crypto-currency,
-or become your personal assistant. Sir-bot-a-lot can help you get started
-writing your own.
+or become your personal assistant.
 
-Sir-bot-a-lot is a project maintained by the `pyslackers`_ community.
+Sir-bot-a-lot aims to be a framework to ease the creation of new and innovating
+bot for you and your team while keeping everything as simple as possible. It is
+build onto a plugin system that allow inter-connection with as much service as
+you like.
+
+This project is maintained by the `pyslackers`_ community.
 Want to join? `Get an invite`_ !
 
+.. note::
+
+    The core sir-bot-a-lot module does **NOTHING** without plugins.
+    Check out the list of :ref:`available plugins`.
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    quickstart
    installation
    configuration
    plugins
-   facade
    references
    contributing
    history

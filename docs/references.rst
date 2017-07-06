@@ -12,12 +12,12 @@ SirBot
 .. autoclass:: sirbot.core.SirBot
    :members:
 
-.. _references_facade:
+.. _references_registry:
 
-MainFacade
-----------
+Registry
+--------
 
-.. autoclass:: sirbot.core.facade.MainFacade
+.. autoclass:: sirbot.core.registry.Registry
    :members:
 
 .. _references_plugin:
@@ -31,7 +31,7 @@ Plugin
 
    .. autoattribute:: sirbot.core.plugin.Plugin.__name__
    .. autoattribute:: sirbot.core.plugin.Plugin.__version__
-   .. autoattribute:: sirbot.core.plugin.Plugin.__facade__
+   .. autoattribute:: sirbot.core.plugin.Plugin.__registry__
 
 .. _references_hook:
 
@@ -48,5 +48,8 @@ Exceptions
 .. autoexception:: sirbot.core.errors.SirBotError
    :members:
 
-.. autoexception:: sirbot.core.errors.FacadeUnavailable
+.. autoexception:: sirbot.core.errors.RegistryError
+   :members:
+
+.. autoexception:: sirbot.core.errors.FrozenRegistryError
    :members:

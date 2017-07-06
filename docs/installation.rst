@@ -4,7 +4,6 @@
 Installation
 ============
 
-
 Stable release
 --------------
 
@@ -18,7 +17,8 @@ To install sir-bot-a-lot, run this command in your terminal:
 
     $ pip install sir-bot-a-lot
 
-This is the preferred method to install sir-bot-a-lot, as it will always install the most recent stable release.
+This is the preferred method to install sir-bot-a-lot, as it will always
+install the most recent stable release.
 
 If you don't have `pip`_ installed, this `Python installation guide`_ can guide
 you through the process.

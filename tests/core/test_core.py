@@ -9,8 +9,6 @@ import logging
 import pytest
 import sirbot
 
-from sirbot.core.facade import MainFacade
-from aiohttp.web import Response
 from copy import deepcopy
 
 from tests.core.test_plugin.sirbot import PluginTest
