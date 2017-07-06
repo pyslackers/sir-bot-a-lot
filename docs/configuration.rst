@@ -2,24 +2,31 @@
 Configuration
 =============
 
-Command Line
-------------
+Start
+-----
 
-To start Sir Bot-a-lot you can use:
+To start Sir Bot-a-lot you can use one of:
 
 .. code-block:: console
 
     $ sirbot
-
-or:
 
 .. code-block:: console
 
     $ python run.py
 
 
-Arguments
-^^^^^^^^^
+Environment variables
+---------------------
+
+The environment variable take precedence over the command line arguments.
+
+* :code:`SIRBOT_PORT`: Port where to run Sir Bot-a-lot
+* :code:`SIRBOT_CONFIG`: Path to Sir Bot-a-lot Yaml config file
+
+
+Command line arguments
+----------------------
 
 The command line arguments take precedence over the configuration file.
 
@@ -30,23 +37,11 @@ The command line arguments take precedence over the configuration file.
 * :code:`-p --plugins`: Plugins to start
 
 
-Environment variables
----------------------
-The environment variable take precedence over the command line arguments and the
-configuration file.
-
-* :code:`SIRBOT_PORT`: Port where to run Sir Bot-a-lot
-* :code:`SIRBOT_CONFIG`: Path to Sir Bot-a-lot Yaml config file
-
-
 Configuration file
 ------------------
 
-Sir Bot-a-lot configuration is a Yaml file containing the core and all the additional
-plugins configuration.
-
-The environment variable and command line arguments take precedence over the
-configuration file.
+Sir Bot-a-lot configuration is a Yaml file containing the core and all the
+additional plugins configuration.
 
 A basic configuration will look like this:
 
@@ -63,11 +58,13 @@ A basic configuration will look like this:
 Starting priority
 ^^^^^^^^^^^^^^^^^
 
-Plugins can be dependant on other plugins. You can ensure a startup order by setting a startup priority. By default all plugins have a priority of 50. Plugins with a higher priority will start before the one with a lower priority.
+Plugins can depend on other plugins. You can ensure a startup order by setting
+a startup priority. By default all plugins have a priority of 50. Plugins with
+a higher priority will start before the one with a lower priority.
 
 If multiple plugins have the same priority they will start simultaneously.
 
-The priority can be set to false to disable a plugin.
+A priority of 0 or false will disable the plugin.
 
 .. code-block:: yaml
 

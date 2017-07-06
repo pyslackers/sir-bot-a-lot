@@ -8,7 +8,9 @@ Installation
 Stable release
 --------------
 
-**NOT YET RELEASED**
+.. note::
+
+    Not yet released
 
 To install sir-bot-a-lot, run this command in your terminal:
 
@@ -30,7 +32,7 @@ You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://gitlab.com/PythonDevCommunity/sir-bot-a-lot
+    $ git clone git://github.com/pyslackers/sir-bot-a-lot
 
 Or download the `tarball`_:
 
