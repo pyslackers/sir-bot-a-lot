@@ -55,8 +55,8 @@ A basic configuration will look like this:
     plugin2:
         ...
 
-Plugins must be importable python modules defining the :ref:`references_hook`.
-See :ref:`writing_plugins` for more information.
+Plugins must be importable python modules. See :ref:`writing_plugins` for more
+information.
 
 .. _conf_starting_priority:
 
@@ -67,9 +67,8 @@ Plugins can depend on other plugins. You can ensure a startup order by setting
 a startup priority. By default all plugins have a priority of 50. Plugins with
 a higher priority will start before the one with a lower priority.
 
-If multiple plugins have the same priority they will start simultaneously.
-
-A priority of 0 or false will disable the plugin.
+If multiple plugins have the same priority they will start simultaneously. A
+priority of 0 or false will disable the plugin.
 
 .. code-block:: yaml
 
@@ -92,7 +91,7 @@ Each plugin should define his own logger. The core logger is :code:`sirbot.core`
 Import
 ------
 
-To use Sir-bot-a-lot in a project:
+To use Sir Bot-a-lot in a project:
 
 .. code-block:: python
 

@@ -4,7 +4,7 @@ Quick Start
 
 .. note::
 
-    The core sir-bot-a-lot module does **NOTHING** without plugins.
+    The core Sir Bot-a-lot module does **NOTHING** without plugins.
     Check out the list of :ref:`available plugins`.
 
 Installation
@@ -29,7 +29,8 @@ More installation instruction can be found :ref:`here <installation>`.
 Configuration
 -------------
 
-To load a custom config file use the :code:`--config` argument or the :code:`SIRBOT_CONFIG` environment variable with the configuration file path.
+To load a custom config file use the :code:`--config` argument or the
+:code:`SIRBOT_CONFIG` environment variable with the configuration file path.
 
 The default configuration file look like this:
 

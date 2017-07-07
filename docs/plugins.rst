@@ -58,11 +58,11 @@ Start
 As plugins might need the functionality of other plugins during startup a
 specific order is establish based on each plugin :ref:`conf_starting_priority`.
 
-Sir-bot-a-lot will also wait for a plugin to be fully started before attempting
+Sir Bot-a-lot will also wait for a plugin to be fully started before attempting
 to start the next one. This ensure that no race condition exist in the starting
 process.
 
-When starting a plugin Sir-bot-a-lot create a new asyncio task in order to
+When starting a plugin Sir Bot-a-lot create a new asyncio task in order to
 allow it to run indefinitely.
 
 Example

@@ -13,17 +13,16 @@ The uses of bots are nearly endless and come in all shapes and sizes.
 They can handle Slack shenanigans, monitor the status of a crypto-currency,
 or become your personal assistant.
 
-Sir-bot-a-lot aims to be a framework to ease the creation of new and innovating
-bot for you and your team while keeping everything as simple as possible. It is
-build onto a plugin system that allow inter-connection with as much service as
-you like.
+Sir Bot-a-lot is a framework built to ease the creation of new and innovating
+bot for you and your team while keeping everything as simple as possible. It use
+a plugin system that allow inter-connection with as much service as you like.
 
 This project is maintained by the `pyslackers`_ community.
 Want to join? `Get an invite`_ !
 
 .. note::
 
-    The core sir-bot-a-lot module does **NOTHING** without plugins.
+    The core Sir Bot-a-lot module does **NOTHING** without plugins.
     Check out the list of :ref:`available plugins`.
 
 .. toctree::
