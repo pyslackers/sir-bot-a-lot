@@ -17,13 +17,13 @@ class Plugin(ABC):  # pragma: no cover
     __name__ = 'plugin'
     """Name of the plugin"""
 
-    __facade__ = ''
-    """Name of the facade"""
+    __registry__ = ''
+    """Name in the registry. Default to the plugin name."""
 
     def __init__(self, loop):
         pass
 
-    async def configure(self, config, router, session, facades):
+    async def configure(self, config, router, session, registry):
         """
         Method called after the initialization of all plugins
 
@@ -32,8 +32,8 @@ class Plugin(ABC):  # pragma: no cover
             router (aiohttp.web_urldispatcher.UrlDispatcher): incoming request
                 router
             session (aiohttp.ClientSession): Session
-            facades (sirbot.core.facade.MainFacade): facades of all available
-                plugins
+            registry (sirbot.core.registry.Registry): registry of all available
+                plugins factories
         """
         pass
 
@@ -70,10 +70,11 @@ class Plugin(ABC):  # pragma: no cover
         """
         return False
 
-    def facade(self):
+    def factory(self):
         """
-        Facade factory
+        Plugin factory
 
-        Used by the :meth:`sirbot.core.facade.MainFacade.get` method
+        Called when requesting this plugin from the registry. Interaction point
+        between the plugins.
         """
-        return False
+        return

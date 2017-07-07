@@ -1,8 +1,0 @@
-sirbot:
-  plugins:
-    - sirbot.examples.plugin.listener
-    - sirbot.examples.plugin.sender
-    - sirbot.examples.plugin.config
-
-exampleconfig:
-  priority: 10

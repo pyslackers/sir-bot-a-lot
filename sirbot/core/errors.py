@@ -4,14 +4,13 @@ class SirBotError(Exception):
     """
 
 
-class FacadeUnavailable(SirBotError):
+class RegistryError(SirBotError):
     """
-    The facade does not exist or the plugin has not started yet
-
-    Args:
-        facade: Name of the unavailable facade
+    Class to compose all registry related errors
     """
-    def __init__(self, facade):
 
-        #: Name of the unavailable facade
-        self.facade = facade
+
+class FrozenRegistryError(RegistryError):
+    """
+    Registry if frozen
+    """

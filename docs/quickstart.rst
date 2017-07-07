@@ -2,6 +2,11 @@
 Quick Start
 ===========
 
+.. note::
+
+    The core sir-bot-a-lot module does **NOTHING** without plugins.
+    Check out the list of :ref:`available plugins`.
+
 Installation
 ------------
 
@@ -21,18 +26,6 @@ More installation instruction can be found :ref:`here <installation>`.
 
 .. _github repo: https://github.com/pyslackers/sir-bot-a-lot
 
-Run
----
-
-To start Sir Bot-a-lot use the command
-
-.. code-block:: console
-
-    $ sirbot
-
-By default no plugins are installed so Sir Bot-a-lot will not do anything.
-Check out the :ref:`available plugins page <available_plugins>`.
-
 Configuration
 -------------
 
@@ -47,3 +40,13 @@ The default configuration file look like this:
         plugins: []
     
 Plugins can also be added with the :code:`--plugins` argument
+
+
+Start
+-----
+
+To start Sir Bot-a-lot use the command
+
+.. code-block:: console
+
+    $ sirbot --config path/to/config/file
