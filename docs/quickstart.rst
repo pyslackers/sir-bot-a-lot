@@ -40,8 +40,13 @@ The default configuration file look like this:
         port: 8080
         plugins: []
     
-Plugins can also be added with the :code:`--plugins` argument
+Plugins can also be added with the :code:`--plugins` argument.
 
+You can auto-generate a configuration file and a basic plugin with:
+
+.. code-block:: console
+
+    $ sirbot init
 
 Start
 -----

@@ -4,10 +4,12 @@
 #
 #    pip-compile --output-file requirements/requirements.txt requirements/requirements.in
 #
-aiohttp==2.0.7
+aiohttp==2.2.3
 async-timeout==1.2.1
-chardet==3.0.2
-multidict==2.1.4
+chardet==3.0.4
+mako==1.0.6
+markupsafe==1.0           # via mako
+multidict==3.1.0
 pluggy==0.4.0
 pyyaml==3.12
-yarl==0.10.1
+yarl==0.11.0

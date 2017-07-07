@@ -2,6 +2,14 @@
 Configuration
 =============
 
+.. note::
+
+    A configuration file and an empty plugin can be auto-generated using:
+
+    .. code-block:: console
+
+        $ sirbot init
+
 Start
 -----
 
@@ -16,25 +24,25 @@ To start Sir Bot-a-lot you can use one of:
     $ python run.py
 
 
-Environment variables
----------------------
-
-The environment variable take precedence over the command line arguments.
-
-* :code:`SIRBOT_PORT`: Port where to run Sir Bot-a-lot
-* :code:`SIRBOT_CONFIG`: Path to Sir Bot-a-lot Yaml config file
-
-
 Command line arguments
 ----------------------
 
-The command line arguments take precedence over the configuration file.
+The command line arguments take precedence over the environment variables.
 
 * :code:`-h --help`: Help message
 * :code:`-P --port`: Port where to run Sir Bot-a-lot
 * :code:`-c --config`: Path to Sir Bot-a-lot Yaml config file
 * :code:`-u --update`: Perform update migration if necessary (i.e. database)
 * :code:`-p --plugins`: Plugins to start
+
+
+Environment variables
+---------------------
+
+The environment variable take precedence over the configuration file.
+
+* :code:`SIRBOT_PORT`: Port where to run Sir Bot-a-lot
+* :code:`SIRBOT_CONFIG`: Path to Sir Bot-a-lot Yaml config file
 
 
 Configuration file

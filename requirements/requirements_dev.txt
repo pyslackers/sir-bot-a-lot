@@ -4,43 +4,47 @@
 #
 #    pip-compile --output-file requirements/requirements_dev.txt requirements/requirements_dev.in
 #
-aiohttp==2.0.7            # via pytest-aiohttp
+aiohttp==2.2.3            # via pytest-aiohttp
 alabaster==0.7.10         # via sphinx
 async-timeout==1.2.1      # via aiohttp
 babel==2.4.0              # via sphinx
-chardet==3.0.2            # via aiohttp
+certifi==2017.4.17        # via requests
+chardet==3.0.4            # via aiohttp, requests
 click==6.7                # via pip-tools
 commonmark==0.5.4         # via recommonmark
-coverage==4.3.4
+coverage==4.4.1
 docutils==0.13.1          # via recommonmark, sphinx
 first==2.0.1              # via pip-tools
 flake8==3.3.0
+idna==2.5                 # via requests
 imagesize==0.7.1          # via sphinx
 jinja2==2.9.6             # via sphinx
 markupsafe==1.0           # via jinja2
 mccabe==0.6.1             # via flake8
-multidict==2.1.4          # via aiohttp, yarl
+multidict==3.1.0          # via aiohttp, yarl
 pip-tools==1.9.0
 pluggy==0.4.0             # via tox
 pockets==0.5.1            # via sphinxcontrib-napoleon
-py==1.4.33                # via pytest, tox
+py==1.4.34                # via pytest, tox
 pycodestyle==2.3.1        # via flake8
 pyflakes==1.5.0           # via flake8
 pygments==2.2.0           # via sphinx
 pytest-aiohttp==0.1.3
-pytest-asyncio==0.5.0
-pytest-cov==2.4.0
+pytest-asyncio==0.6.0
+pytest-cov==2.5.1
 pytest-runner==2.11.1
-pytest==3.0.7             # via pytest-aiohttp, pytest-asyncio, pytest-cov
+pytest==3.1.3             # via pytest-aiohttp, pytest-asyncio, pytest-cov
 pytz==2017.2              # via babel
 recommonmark==0.4.0
-requests==2.13.0          # via sphinx
+requests==2.18.1          # via sphinx
 six==1.10.0               # via pip-tools, pockets, sphinx, sphinxcontrib-napoleon
 snowballstemmer==1.2.1    # via sphinx
 sphinx-pypi-upload==0.2.1
-sphinx==1.5.5
+sphinx==1.6.3
 sphinxcontrib-asyncio==0.2.0
 sphinxcontrib-napoleon==0.6.1
+sphinxcontrib-websupport==1.0.1  # via sphinx
 tox==2.7.0
+urllib3==1.21.1           # via requests
 virtualenv==15.1.0        # via tox
-yarl==0.10.1              # via aiohttp
+yarl==0.11.0              # via aiohttp
