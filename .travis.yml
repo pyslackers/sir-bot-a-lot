@@ -1,15 +1,15 @@
 language: python
 
 python:
-  - "3.5"
-  - "3.6"
-  - "3.7-dev"
-  - "nightly"
+  - '3.5'
+  - '3.6'
+  - 3.7-dev
+  - nightly
 
 matrix:
   allow_failures:
-    - python: "3.7-dev"
-    - python: "nightly"
+    - python: 3.7-dev
+    - python: nightly
 
 install:
   - pip install -r requirements/requirements.txt
@@ -19,11 +19,25 @@ script:
   - python setup.py flake8
   - python setup.py test
   - python setup.py doc
+  - python setup.py sdist
+  - python setup.py bdist_wheel
 
 deploy:
-  provider: script
-  script: curl -X POST http://readthedocs.org/build/sir-bot-a-lot
-  on:
-    repo: pyslackers/sir-bot-a-lot
-    branch: master
-    python: "3.6"
+  - provider: script
+    script: curl -X POST http://readthedocs.org/build/sir-bot-a-lot
+    on:
+      repo: pyslackers/sir-bot-a-lot
+      branch: master
+      python: "3.6"
+  - provider: pypi
+    server: https://testpypi.python.org/pypi
+    distributions: sdist bdist_wheel
+    user: Ovv
+    password:
+      secure: ppPzg/bOjygvWlAfDUzghI/VmMdkV6kZZM8pCfzut23cxGoShMF8m2dbkwXdEKmUQ94xXiL6T+c/TZlTNxnwSPYhEk9iSjYzv+DiOdS4Hdj8TH99qSIh+y7jvPJMoqojvr6WFkVPEd7eK9NL10++47miueY0KYLxYzPhbyP6u8K1pr3K55uWB3MfnEwDN3hzhItMRu30MBrV87064Il8hHzttcWquNl8uZ0Khzz5MaQGvuhgg6oCiX/RUgVMvtzaDSv0S3TniiF3asRbPJI+JzVxGXPSZGEEpNu6Fh+vfLs7N1mFbFtcNAp8zSug7AoqhhCQLSuYjH84fU/XhEMop09N7jwqWa9VM4HynvmdJaKsz+BTwMVrJwqyi8KYW9RR5/eg4Vq6MP1dFAIj6sO3Ikqw9UCyG+7MbPThLfhJGpkr/thtA4/UI6jBW07+OY9A1vKSQziRlDWLlKroVSP/kybu4UQlxjtvplFK6zdpJCESlDyXVPufKcTjwJlV/1CUQi+YxBQ32nRxSqhnGctwXqwrGpuqElqMNfifTEvK+YL7/24mjoFtfskecRJletXbiNmNJMe4lWYoKwRelAGz2xX1HKdWVdq+4cZ71+1tOvyVz7GpNDUpX5WnYtdDFntBCKNqnKWDMB44e1OCuJSkGKYVxWPtkLn+P3iIlc/golI=
+    on:
+      repo: pyslackers/sir-bot-a-lot
+      branch: master
+      python: '3.6'
+      tags: true
+

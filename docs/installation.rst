@@ -7,10 +7,6 @@ Installation
 Stable release
 --------------
 
-.. note::
-
-    Not yet released
-
 To install run this command in your terminal:
 
 .. code-block:: console
