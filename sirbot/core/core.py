@@ -1,7 +1,7 @@
 """
 sirbot core
 
-Core API of Sir-bot-a-lot
+Core API of Sir Bot-a-lot
 """
 
 import asyncio
@@ -9,6 +9,7 @@ import importlib
 import logging
 import logging.config
 import os
+import sys
 import aiohttp
 import pluggy
 import yaml
@@ -23,6 +24,9 @@ from .registry import Registry
 
 logger = logging.getLogger(__name__)
 
+if sys.version_info[:2] == (3, 5):
+    ModuleNotFoundError = ImportError
+
 
 class SirBot:
     """
@@ -30,19 +34,18 @@ class SirBot:
     done on initialization. Plugins configuration is done on startup.
 
     Args:
-        config (dict): Configuration of Sir-bot-a-lot
+        config (dict): Configuration of Sir Bot-a-lot
         loop (asyncio.AbstractEventLoop): Event loop
     """
     def __init__(self, config=None, *, loop=None):
         self.config = config or {}
         self._configure()
-        logger.info('Initializing Sir-bot-a-lot')
+        logger.info('Initializing Sir Bot-a-lot')
 
         self._loop = loop or asyncio.get_event_loop()
         self._tasks = {}
         self._dispatcher = None
         self._pm = None
-        self._session = aiohttp.ClientSession(loop=self._loop)
         self._plugins = dict()
 
         self._start_priority = defaultdict(list)
@@ -55,8 +58,9 @@ class SirBot:
 
         self._initialize_plugins()
         self._register_factory()
+        self._session = aiohttp.ClientSession(loop=self._loop)
 
-        logger.info('Sir-bot-a-lot Initialized')
+        logger.info('Sir Bot-a-lot Initialized')
 
     def _configure(self):
         """
@@ -83,23 +87,23 @@ class SirBot:
         """
         Start sirbot
         """
-        logger.info('Starting Sir-bot-a-lot ...')
+        logger.info('Starting Sir Bot-a-lot ...')
         await self._start_plugins()
 
-        logger.info('Sir-bot-a-lot fully started')
+        logger.info('Sir Bot-a-lot fully started')
 
     async def _stop(self, app) -> None:
         """
         Stop sirbot
         """
-        logger.info('Stopping Sir-bot-a-lot ...')
+        logger.info('Stopping Sir Bot-a-lot ...')
 
         for task in self._tasks.values():
             task.cancel()
         await asyncio.gather(*self._tasks.values(), loop=self._loop)
         await self._session.close()
 
-        logger.info('Sir-bot-a-lot fully stopped')
+        logger.info('Sir Bot-a-lot fully stopped')
 
     def _import_plugins(self) -> None:
         """
@@ -112,7 +116,14 @@ class SirBot:
         self._pm.add_hookspecs(hookspecs)
 
         for plugin in self.config['sirbot']['plugins']:
-            p = importlib.import_module(plugin)
+            try:
+                p = importlib.import_module(plugin)
+            except (ModuleNotFoundError, ):
+                if os.getcwd() not in sys.path:
+                    sys.path.append(os.getcwd())
+                    p = importlib.import_module(plugin)
+                else:
+                    raise
             self._pm.register(p)
 
     def _initialize_plugins(self):

@@ -64,14 +64,17 @@ setup(
         'sirbot',
         'sirbot.core',
         'sirbot.utils',
+        'sirbot.cli',
     ],
     package_dir={
         'sirbot': 'sirbot',
         'sirbot.core': 'sirbot/core',
         'sirbot.utils': 'sirbot/utils',
+        'sirbot.cli': 'sirbot/cli',
     },
     package_data={
         'sirbot.core': ['config.yml'],
+        'sirbot.cli': ['sirbot.yml.mako', 'plugin.py.mako']
     },
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and
@@ -86,7 +89,7 @@ setup(
     # installed, specify them here.
     entry_points={
         'console_scripts': [
-            'sirbot=sirbot.core.cli:main'
+            'sirbot=sirbot.cli:main'
         ]
     },
     include_package_data=True,

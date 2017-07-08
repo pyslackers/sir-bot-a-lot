@@ -5,3 +5,4 @@ multidict
 pluggy
 pyyaml
 yarl
+mako
