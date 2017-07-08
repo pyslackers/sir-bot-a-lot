@@ -7,7 +7,7 @@ Core Team
 
 * Mike from IT <mike@from.it>
 * Shawn McElroy <shawn@skift.io>
-* Ovv <ovv@outlook.com>
+* Ovv <contact@ovv.wtf>
 * Matt Rasband <matt.rasband@gmail.com>
 
 Contributors

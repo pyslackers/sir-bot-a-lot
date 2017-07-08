@@ -10,21 +10,14 @@ Quick Start
 Installation
 ------------
 
-The sources for Sir Bot-a-lot can be downloaded from the `github repo`_.
+Sir Bot-a-lot can be install with pip:
 
 .. code-block:: console
 
-    $ git clone https://github.com/pyslackers/sir-bot-a-lot.git
+    $ pip install sir-bot-a-lot
 
-Once you have a copy of the source, you can install it with:
-
-.. code-block:: console
-
-    $ pip install sir-bot-a-lot/
-
-More installation instruction can be found :ref:`here <installation>`.
-
-.. _github repo: https://github.com/pyslackers/sir-bot-a-lot
+This is the preferred method as it will always install the most recent stable
+release.
 
 Configuration
 -------------
