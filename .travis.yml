@@ -30,7 +30,6 @@ deploy:
       branch: master
       python: "3.6"
   - provider: pypi
-    server: https://testpypi.python.org/pypi
     distributions: sdist bdist_wheel
     user: Ovv
     password:
