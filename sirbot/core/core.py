@@ -49,8 +49,6 @@ class SirBot:
         self._plugins = dict()
 
         self._start_priority = defaultdict(list)
-        self._registry = Registry()
-
         self._import_plugins()
         self._app = web.Application(loop=self._loop)
         self._app.on_startup.append(self._start)
@@ -165,8 +163,8 @@ class SirBot:
             if info['priority']:
                 factory = getattr(info['plugin'], 'factory', None)
                 if callable(factory):
-                    self._registry[info['factory']] = info['plugin'].factory
-        self._registry.freeze()
+                    Registry[info['factory']] = info['plugin'].factory
+        Registry.freeze()
 
     async def _configure_plugins(self) -> None:
         """
@@ -180,7 +178,6 @@ class SirBot:
             info['plugin'].configure(
                 config=info['config'],
                 session=self._session,
-                registry=self._registry,
                 router=self.app.router
             )
             for info in self._plugins.values()

@@ -7,7 +7,7 @@ from .errors import FrozenRegistryError
 logger = logging.getLogger(__name__)
 
 
-class Registry(MutableMapping):
+class RegistrySingleton(MutableMapping):
     """
     Class regrouping all available plugin factory.
 
@@ -53,3 +53,5 @@ class Registry(MutableMapping):
 
     def __contains__(self, item):
         return item in self._plugins
+
+Registry = RegistrySingleton()
