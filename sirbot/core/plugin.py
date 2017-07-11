@@ -23,7 +23,7 @@ class Plugin(ABC):  # pragma: no cover
     def __init__(self, loop):
         pass
 
-    async def configure(self, config, router, session, registry):
+    async def configure(self, config, router, session):
         """
         Method called after the initialization of all plugins
 
