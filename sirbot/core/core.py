@@ -20,7 +20,7 @@ from aiohttp import web
 from sirbot.utils import merge_dict
 
 from . import hookspecs
-from .registry import Registry
+from .registry import registry
 
 logger = logging.getLogger(__name__)
 
@@ -163,8 +163,8 @@ class SirBot:
             if info['priority']:
                 factory = getattr(info['plugin'], 'factory', None)
                 if callable(factory):
-                    Registry[info['factory']] = info['plugin'].factory
-        Registry.freeze()
+                    registry[info['factory']] = info['plugin'].factory
+        registry.freeze()
 
     async def _configure_plugins(self) -> None:
         """
