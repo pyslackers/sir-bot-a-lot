@@ -17,7 +17,7 @@ SirBot
 Registry
 --------
 
-.. autoclass:: sirbot.core.registry.Registry
+.. autoclass:: sirbot.core.RegistrySingleton
    :members:
 
 .. _references_plugin:
