@@ -12,7 +12,7 @@ class PluginTest(Plugin):
         self.loop = loop
         self._started = False
 
-    async def configure(self, config, router, session, registry):
+    async def configure(self, config, router, session):
         self.config = config
 
     async def start(self):
