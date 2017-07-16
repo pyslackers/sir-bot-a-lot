@@ -23,6 +23,13 @@ CONFIG = {
 }
 
 
+@pytest.fixture
+def registry(monkeypatch):
+    new_registry = sirbot.registry.RegistrySingleton()
+    monkeypatch.setattr('sirbot.core.core.registry', new_registry)
+    monkeypatch.setattr('sirbot.registry.registry', new_registry)
+
+
 def test_bot_is_starting(loop, test_server):
     bot = sirbot.SirBot(loop=loop)
     loop.run_until_complete(test_server(bot._app))
@@ -39,7 +46,7 @@ def test_load_config(loop):
     assert bot.config == config
 
 
-def test_logging_config(loop):
+def test_logging_config(loop, registry):
     config = {
         'logging': {
             'version': 1,
@@ -61,7 +68,7 @@ def test_logging_config(loop):
     assert logging.getLogger('sirbot').level == 40
 
 
-def test_plugin_import(loop, test_server):
+def test_plugin_import(loop, test_server, registry):
     bot = sirbot.SirBot(loop=loop, config=CONFIG)
     loop.run_until_complete(test_server(bot._app))
     assert bot._pm.has_plugin('tests.core.test_plugin.sirbot')
@@ -76,25 +83,25 @@ def test_plugin_import_error(loop):
         bot._import_plugins()
 
 
-def test_initialize_plugins(loop):
+def test_initialize_plugins(loop, registry):
     bot = sirbot.SirBot(loop=loop, config=CONFIG)
     assert isinstance(bot._plugins['test']['plugin'], PluginTest)
 
 
-def test_plugin_configure(loop, test_server):
+def test_plugin_configure(loop, test_server, registry):
     bot = sirbot.SirBot(loop=loop, config=CONFIG)
     loop.run_until_complete(bot._configure_plugins())
 
     assert bot._plugins['test']['plugin'].config == CONFIG['test']
 
 
-def test_start_plugins(loop, test_server):
+def test_start_plugins(loop, test_server, registry):
     bot = sirbot.SirBot(loop=loop, config=CONFIG)
     loop.run_until_complete(test_server(bot._app))
     assert 'test' in bot._tasks
 
 
-def test_plugin_task_error(loop, test_server, capsys):
+def test_plugin_task_error(loop, test_server, registry):
     config = deepcopy(CONFIG)
     config['sirbot']['plugins'] = ['tests.core.test_plugin.sirbot_start_error']
     bot = sirbot.SirBot(loop=loop, config=config)
@@ -102,7 +109,7 @@ def test_plugin_task_error(loop, test_server, capsys):
         loop.run_until_complete(test_server(bot._app))
 
 
-def test_plugin_priority(loop, test_server):
+def test_plugin_priority(loop, registry):
     config = deepcopy(CONFIG)
     config['test']['priority'] = 80
     config['test-error'] = {'priority': 70}

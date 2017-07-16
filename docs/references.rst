@@ -17,7 +17,13 @@ SirBot
 Registry
 --------
 
-.. autoclass:: sirbot.core.RegistrySingleton
+.. autoclass:: sirbot.registry.RegistrySingleton
+   :members:
+
+.. autoexception:: sirbot.registry.RegistryError
+   :members:
+
+.. autoexception:: sirbot.registry.FrozenRegistryError
    :members:
 
 .. _references_plugin:
@@ -48,8 +54,3 @@ Exceptions
 .. autoexception:: sirbot.core.errors.SirBotError
    :members:
 
-.. autoexception:: sirbot.core.errors.RegistryError
-   :members:
-
-.. autoexception:: sirbot.core.errors.FrozenRegistryError
-   :members:
