@@ -65,12 +65,14 @@ setup(
         'sirbot.core',
         'sirbot.utils',
         'sirbot.cli',
+        'sirbot.registry'
     ],
     package_dir={
         'sirbot': 'sirbot',
         'sirbot.core': 'sirbot/core',
         'sirbot.utils': 'sirbot/utils',
         'sirbot.cli': 'sirbot/cli',
+        'sirbot.registry': 'sirbot/registry'
     },
     package_data={
         'sirbot.core': ['config.yml'],
