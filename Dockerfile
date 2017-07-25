@@ -7,5 +7,7 @@ WORKDIR /app
 COPY . .
 RUN python3 -m pip install .
 
+COPY sirbot/core/config.yml /etc/sirbot.yml
+
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
-CMD ["sirbot"]
+CMD ["/bin/sh", "-c", "sirbot -c /etc/sirbot.yml --update && exec sirbot -c /etc/sirbot.yml"]
