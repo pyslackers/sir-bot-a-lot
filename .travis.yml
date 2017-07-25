@@ -24,7 +24,7 @@ script:
   - python setup.py doc
   - python setup.py sdist
   - python setup.py bdist_wheel
-  - docker build . -t pyslackers/sir-bot-a-lot:$TRAVIS_BRANCH
+  - docker build . -t pyslackers/sir-bot-a-lot
 
 deploy:
   - provider: script
