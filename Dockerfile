@@ -1,11 +1,13 @@
 FROM python:3.6-alpine
 
-ENV PYTHONPATH=./.pip:/app/.pip:.: \
-    DOCKER=True
-COPY . /app/
-RUN python3 -m pip install -r /app/requirements/requirements.txt -t /app/.pip
-
+RUN apk add --update --no-cache gcc g++ && pip install dumb-init
 
 WORKDIR /app
 
-CMD ["python", "./run.py"]
+COPY . .
+RUN python3 -m pip install .
+
+COPY docker.yml /etc/sirbot.yml
+
+ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
+CMD ["/bin/sh", "-c", "sirbot -c /etc/sirbot.yml --update && exec sirbot -c /etc/sirbot.yml"]

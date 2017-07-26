@@ -227,6 +227,7 @@ class SirBot:
         Trigger the update method of the plugins. This is needed if the plugins
         need to perform update migration (i.e database)
         """
+        logger.info('Updating Sir Bot-a-lot')
         for name, plugin in self._plugins.items():
             plugin_update = getattr(plugin['plugin'], 'update', None)
             if callable(plugin_update):
@@ -234,6 +235,7 @@ class SirBot:
                 await plugin_update(self.config.get(name, {}), self._plugins)
                 logger.info('%s updated', name)
         self._session.close()
+        logger.info('Sir Bot-a-lot updated')
 
     @property
     def app(self) -> web.Application:
