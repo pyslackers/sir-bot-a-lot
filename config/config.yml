@@ -14,12 +14,19 @@ logging:
       level: DEBUG
       formatter: simple
       stream: ext://sys.stdout
+    file:
+      class: logging.handlers.RotatingFileHandler
+      filename: /var/log/sirbot/sirbot.log
+      maxBytes: 5242880
+      backupCount: 7
+      level: WARNING
+      formatter: simple
   loggers:
     sirbot:
       level: DEBUG
-      handlers: [console]
+      handlers: [file, console]
       propagate: no
   root:
     level: INFO
-    handlers: [console]
+    handlers: [file, console]
     propagate: no
