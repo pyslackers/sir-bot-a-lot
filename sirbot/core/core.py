@@ -56,7 +56,8 @@ class SirBot:
 
         self._initialize_plugins()
         self._register_factory()
-        self._session = aiohttp.ClientSession(loop=self._loop)
+        headers = {'User-Agent': self.config['sirbot']['user-agent']}
+        self._session = aiohttp.ClientSession(loop=self._loop, headers=headers)
 
         logger.info('Sir Bot-a-lot Initialized')
 
