@@ -1,3 +1,4 @@
 sirbot:
   port: 8080
   plugins: []
+  user-agent: 'Sir-bot-a-lot demo'

@@ -27,12 +27,6 @@ script:
   - docker build . -t pyslackers/sir-bot-a-lot
 
 deploy:
-  - provider: script
-    script: curl -X POST http://readthedocs.org/build/sir-bot-a-lot
-    on:
-      repo: pyslackers/sir-bot-a-lot
-      branch: master
-      python: "3.6"
   - provider: pypi
     distributions: sdist bdist_wheel
     user: Ovv
